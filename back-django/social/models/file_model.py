@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class File(models.Model):
 
     class FileType(models.TextChoices):
@@ -11,6 +12,7 @@ class File(models.Model):
 
     data = models.BinaryField()
     type = models.CharField(max_length=100, choices=FileType.choices)
+    deleted = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'file'
