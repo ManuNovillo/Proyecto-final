@@ -1,0 +1,9 @@
+#file-input {
+  visibility:hidden;
+  width:0;
+  height:0
+}
+
+#image-upload:hover {
+  cursor: pointer;
+}
