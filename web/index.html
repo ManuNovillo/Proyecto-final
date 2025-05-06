@@ -20,29 +20,26 @@
             <div class="row justify-content-between align-items-center">
                 <div class="col-4">
                     <img src="https://i.pinimg.com/originals/c6/df/a2/c6dfa22150790c670c988c5196f6ba0e.gif" alt=""
-                        width="100" height="100" class="rounded-circle border border-2 border-light">
-                    <!-- Poner "Logo nombre_app" -->
+                        width="100" height="100" class="rounded-circle "> <!-- Poner "Logo nombre_app" -->
                 </div>
                 <div class="col-4 ">
                     <input type="text" class="w-100 bg-dark rounded-3 border border-2" placeholder="Buscar">
                 </div>
-<!--                 <div class="col-4 text-end">
-                    <button class="btn btn-success text-white">Login</button>
-                </div> -->
                 <div class="col-4 text-end">
-                    <a href="" data-bs-target="#perfil" data-bs-toggle="modal">
-                        <img src="https://eq2imhfmrcc.exactdn.com/wp-content/uploads/2016/08/golden-retriever.jpg?strip=all&lossy=1&ssl=1"
-                            alt="" width="100" height="100" class="rounded-circle border border-2 border-light">
-                    </a>
+                    <button class="btn btn-success text-white" data-bs-toggle="modal"
+                        data-bs-target="#modal-login">Login</button>
                 </div>
+<!--                 <div class="col-4 text-end">
+                    <a href="" data-bs-target="#modal-perfil" data-bs-toggle="modal">
+                        <img src="https://eq2imhfmrcc.exactdn.com/wp-content/uploads/2016/08/golden-retriever.jpg?strip=all&lossy=1&ssl=1"
+                            alt="" width="100" height="100" class="rounded-circle">
+                    </a>
+                </div> -->
             </div>
         </div>
     </header>
-    <main class="text-white text-center mt-5">
-        <div class="div">
-
-        </div>
-        <div class="card">
+    <main class="text-white mt-5">
+        <div class="card w-25 mx-auto">
             <img class="card-img-top" src="holder.js/100x180/" alt="Title" />
             <div class="card-body">
                 <h4 class="card-title">Title</h4>
@@ -65,19 +62,95 @@
 
     <script type="module" src="/src/index.js"></script>
 
-    <div class="modal fade" id="perfil" tabindex="-1" data-bs-keyboard="false" role="dialog"
+    <div class="modal fade" id="modal-login" tabindex="-1" data-bs-keyboard="false" role="dialog"
+        aria-labelledby="modalTitleId" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-md" role="document">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitleId">
+                        Iniciar Sesión
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <form id="form-login" class="text-center" novalidate>
+                    <div class="modal-body text-center w-50 mx-auto py-4">
+                        <div class="mb-4">
+                            <label for="email-login">Correo electrónico</label>
+                            <input type="email" class="rounded-2 border-0 p-1" id="email-login" />
+                        </div>
+                        <div class="mb-2">
+                            <label for="password-login">Contraseña</label>
+                            <input type="password" class="rounded-2 border-0 p-1" id="password-login" />
+                            <p id="password-login-error" class="text-danger mt-1"></p>
+                        </div>
+                        <p>¿No tienes cuenta? <a href="" data-bs-toggle="modal" data-bs-target="#modal-signup">Regístrate</a></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary">Iniciar sesión</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-signup" tabindex="-1" data-bs-keyboard="false" role="dialog"
+        aria-labelledby="modalTitleId" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-md" role="document">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitleId">
+                        Registrarse
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <form id="form-signup" class="text-center" novalidate>
+                    <div class="modal-body text-center w-50 mx-auto py-4">
+                        <div class="mb-4">
+                            <label for="email-signup">Correo electrónico</label>
+                            <input type="email" class="rounded-2 border-0 p-1" id="email-signup" />
+                        </div>
+                        <div class="mb-4">
+                            <label for="password-signup">Contraseña</label>
+                            <input type="password" class="rounded-2 border-0 p-1" id="password-signup" />
+                        </div>
+                        <div class="mb-1">
+                            <label for="confirm-password-signup">Confirmar contraseña</label>
+                            <input type="password" class="rounded-2 border-0 p-1" id="confirm-password-signup" />
+                        </div>
+                        <p id="password-signup-error" class="text-danger"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary">Iniciar sesión</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-perfil" tabindex="-1" data-bs-keyboard="false" role="dialog"
         aria-labelledby="modalTitleId" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg" role="document">
             <div class="modal-content bg-dark text-white">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitleId">Perfil de MEMES</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="text-center">
                         <div class="position-relative d-inline-block mx-auto">
                             <img src="https://eq2imhfmrcc.exactdn.com/wp-content/uploads/2016/08/golden-retriever.jpg?strip=all&lossy=1&ssl=1"
-                                width="300" height="300" alt="Logo" class="rounded-circle border border-2 border-dark" />
+                                width="300" height="300" alt="Logo"
+                                class="rounded-circle border border-2 border-dark" />
                             <label for="file-input" class="position-absolute bottom-0 end-0 me-2 mb-1">
                                 <i id="image-upload" class="fa fa-pencil text-white rounded-circle bg-black p-2"
                                     aria-hidden="true"></i>
@@ -85,7 +158,6 @@
                             <input id="file-input" type="file" />
                         </div>
                     </div>
-
                     <br>
                     <textarea name="" id="" maxlength="10" class="w-100 rounded-2">Descripcion</textarea>
                     <br>
