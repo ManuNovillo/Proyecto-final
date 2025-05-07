@@ -10,6 +10,8 @@ const supabase = createClient(supabaseUrl, supabaseToken)
 const profilePictureInput = document.querySelector('input[type=file]');
 profilePictureInput.addEventListener('change', changeFile);
 
+let access_token = null;
+
 const signUpForm = document.getElementById('form-signup');
 signUpForm.addEventListener('submit', async function (event) {
   event.preventDefault();
@@ -35,6 +37,7 @@ signUpForm.addEventListener('submit', async function (event) {
     alert('Error: ' + error.message);
     console.error('Error:', error.message);
   } else {
+    access_token = data.session.access_token;
     console.log('Success:', data);
   }
 });
@@ -49,17 +52,17 @@ loginForm.addEventListener('submit', async function (event) {
     errorMessage.textContent = 'La contraseña debe tener al menos 8 caracteres';
     return;
   }
-
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signInWithPassword({
     "email": email,
     "password": password,
   });
 
   if (error) {
-    alert('Error: ' + error.message);
+    
     console.error('Error:', error.message);
   } else {
     console.log('Success:', data);
+    access_token = data.session.access_token;
   }
 });
 
@@ -75,3 +78,7 @@ async function changeFile() {
   }
 }
 
+async function getToken() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token;
+}
