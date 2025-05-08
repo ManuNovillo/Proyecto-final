@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { v4 as uuidv4 } from 'uuid'
 
 console.log('Hello World!');
 
@@ -18,9 +19,9 @@ signUpForm.addEventListener('submit', async function (event) {
   const email = document.getElementById('email-signup').value;
   const password = document.getElementById('password-signup').value;
   const confirmPassword = document.getElementById('confirm-password-signup').value;
-  const errorMessage = document.getElementById('password-signup-error');
+  const errorText = document.getElementById('signup-error');
   if (password.length < 8) {
-    errorMessage.textContent = 'La contraseña debe tener al menos 8 caracteres';
+    errorText.textContent = 'La contraseña debe tener al menos 8 caracteres';
     return;
   }
   if (password !== confirmPassword) {
@@ -47,18 +48,14 @@ loginForm.addEventListener('submit', async function (event) {
   event.preventDefault();
   const email = document.getElementById('email-login').value;
   const password = document.getElementById('password-login').value;
-  if (password.length < 8) {
-    const errorMessage = document.getElementById('password-login-error');
-    errorMessage.textContent = 'La contraseña debe tener al menos 8 caracteres';
-    return;
-  }
+  const errorText = document.getElementById('login-error');
   const { data, error } = await supabase.auth.signInWithPassword({
     "email": email,
     "password": password,
   });
 
   if (error) {
-    
+    errorText.textContent = "Error al iniciar sesión";
     console.error('Error:', error.message);
   } else {
     console.log('Success:', data);
@@ -69,16 +66,16 @@ loginForm.addEventListener('submit', async function (event) {
 async function changeFile() {
   console.log('File changed!');
   const file = profilePictureInput.files[0];
-  const { data, error } = await supabase.auth.signUp({ "email": "hdflulkahdajkdhaakdjghakdgah@gmail.com", "password": "holaquetal1234" })
+  const uuid = uuidv4();
+  const { data, error } = supabase.storage.from('posts').upload(`${uuid}`, file)
   if (error) {
-    console.error('Error:', error.message);
-  }
-  if (data.user) {
-    console.log('Success:', data);
+    console.error('Error uploading file:', error.message);
+  } else {
+    console.log('File uploaded successfully:', data);
   }
 }
 
-async function getToken() {
+async function getSessionToken() {
   const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token;
 }
