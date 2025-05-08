@@ -11,7 +11,16 @@ const supabase = createClient(supabaseUrl, supabaseToken)
 const profilePictureInput = document.querySelector('input[type=file]');
 profilePictureInput.addEventListener('change', changeFile);
 
-let access_token = null;
+let user = null;
+
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN') {
+    user = session.user;
+  } else if (event === 'SIGNED_OUT') {
+    user = null;
+  }
+});
+
 
 const signUpForm = document.getElementById('form-signup');
 signUpForm.addEventListener('submit', async function (event) {
@@ -60,6 +69,7 @@ loginForm.addEventListener('submit', async function (event) {
   } else {
     console.log('Success:', data);
     access_token = data.session.access_token;
+    console.log('aaaaaaaaa');
   }
 });
 
@@ -68,9 +78,7 @@ async function changeFile() {
   const file = profilePictureInput.files[0];
   const uuid = uuidv4();
   const { data, error } = supabase.storage.from('posts').upload(`${uuid}`, file)
-  if (error) {
-    console.error('Error uploading file:', error.message);
-  } else {
+  if (data) {
     console.log('File uploaded successfully:', data);
   }
 }
