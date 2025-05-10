@@ -9,6 +9,8 @@ djangorestframework = "*"
 oracledb = "*"
 firebase-admin = "*"
 pyjwt = "*"
+cryptography = "*"
+requests = "*"
 
 [dev-packages]
 

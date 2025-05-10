@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_http_methods
+import jwt
 
 from social.serializers import PostSerializer, UserSerializer, CommentSerializer
 from social.models import Post, User, Comment
@@ -9,11 +10,11 @@ from social.models import Post, User, Comment
 
 def validate_token(endpoint):
     def wrapper(request, *args, **kwargs):
-        token = request.META.get('HTTP_AUTHORIZATION')
+        token = request.GET.get('token') or request.POST.get('token')
         if not token:
             return JsonResponse({'error': 'Token is missing'}, status=401)
-        # Token validation logic goes here
-        return endpoint(request, *args, **kwargs)
+        decoded = jwt.decode(token, 'your_secret_key', algorithms=['HS256'])
+    return wrapper
 
 
 @require_http_methods(["POST"])
