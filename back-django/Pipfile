@@ -8,6 +8,10 @@ django = "*"
 djangorestframework = "*"
 oracledb = "*"
 firebase-admin = "*"
+pyjwt = "*"
+cryptography = "*"
+python-jose = "*"
+requests = "*"
 
 [dev-packages]
 
