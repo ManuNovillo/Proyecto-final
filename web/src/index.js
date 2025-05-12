@@ -43,12 +43,9 @@ signUpForm.addEventListener('submit', async function (event) {
     "password": password,
   });
 
-  if (error) {
-    alert('Error: ' + error.message);
-    console.error('Error:', error.message);
+  if (data) {
+    
   } else {
-    access_token = data.session.access_token;
-    console.log('Success:', data);
   }
 });
 
@@ -86,4 +83,8 @@ async function changeFile() {
 async function getSessionToken() {
   const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token;
+}
+
+async function createUser() {
+
 }
