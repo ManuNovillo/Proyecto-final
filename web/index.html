@@ -15,7 +15,7 @@
 </head>
 
 <body class="bg-dark">
-    <header class="py-3 sticky-top bg-dark border-bottom border-bottom-2">
+    <header class="py-3 sticky-top bg-dark border-bottom-1 border-bottom-subtle">
         <div class="container">
             <div class="row justify-content-between align-items-center">
                 <div class="col-4">
@@ -23,13 +23,13 @@
                         width="100" height="100" class="rounded-circle "> <!-- Poner "Logo nombre_app" -->
                 </div>
                 <div class="col-4 ">
-                    <input type="text" class="w-100 bg-dark rounded-3 border border-2" placeholder="Buscar">
+                    <input type="text" class="w-100 bg-dark rounded-3 border-subtle border-2" placeholder="Buscar">
                 </div>
-                <div class="col-4 text-end">
+                <div class="col-4 text-end" id="login-button">
                     <button class="btn btn-success text-white" data-bs-toggle="modal"
                         data-bs-target="#modal-login">Login</button>
                 </div>
-                <div class="col-4 text-end">
+                <div class="col-4 text-end d-none" id="profile-picture">
                     <a href="" data-bs-target="#modal-perfil" data-bs-toggle="modal">
                         <img src="https://eq2imhfmrcc.exactdn.com/wp-content/uploads/2016/08/golden-retriever.jpg?strip=all&lossy=1&ssl=1"
                             alt="" width="100" height="100" class="rounded-circle">
@@ -39,14 +39,40 @@
         </div>
     </header>
     <main class="text-white mt-5">
-        <div class="card w-25 mx-auto">
-            <img class="card-img-top" src="holder.js/100x180/" alt="Title" />
-            <div class="card-body">
-                <h4 class="card-title">Title</h4>
-                <p class="card-text">Text</p>
+
+        <div id="posts">
+            <div class="card w-25 mx-auto mb-3 text-bg-dark border-subtle">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            Holaaaa
+                        </div>
+                        <div class="col-6 text-end">
+                            <p>23 marzo</p>
+                        </div>
+                    </div>
+                    <img class="card-img-top"
+                        src="https://www.cats.org.uk/media/13136/220325case013.jpg?width=500&height=333.49609375"
+                        alt="Title" />
+                    <p class="card-text">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Doloribus asperiores,
+                        veritatis laudantium, officiis saepe facilis mollitia labore velit porro reiciendis voluptatibus
+                        eos et natus. Impedit iste deleniti harum quidem sit!</p>
+                </div>
+            </div>
+            <div class="card w-25 mx-auto text-bg-dark border-subtle">
+                <div class="card-body">
+                    <h4 class="card-title">Title</h4>
+                    <img class="card-img-top"
+                        src="https://www.wnct.com/wp-content/uploads/sites/99/2022/07/Cat.jpg?w=2560&h=1440&crop=1"
+                        alt="Title" />
+                    <p class="card-text">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Doloribus asperiores,
+                        veritatis laudantium, officiis saepe facilis mollitia labore velit porro reiciendis voluptatibus
+                        eos et natus. Impedit iste deleniti harum quidem sit!</p>
+                </div>
             </div>
         </div>
 
+        <button data-bs-toggle="modal" data-bs-target="#postmodal">Postear</button>
     </main>
     <footer>
         <!-- place footer here -->
@@ -84,7 +110,8 @@
                             <input type="password" class="rounded-2 border-0 p-1" id="password-login" />
                             <p id="login-error" class="text-danger mt-1"></p>
                         </div>
-                        <p>¿No tienes cuenta? <a href="" data-bs-toggle="modal" data-bs-target="#modal-signup">Regístrate</a></p>
+                        <p>¿No tienes cuenta? <a href="" data-bs-toggle="modal"
+                                data-bs-target="#modal-signup">Regístrate</a></p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -174,6 +201,32 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="postmodal" tabindex="-1" data-bs-keyboard="false" role="dialog"
+        aria-labelledby="modalTitleId" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitleId">
+                        Modal title
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="post-form" method="post">
+                    <div class="modal-body">
+                        <textarea name="text" id=""></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Close
+                        </button>
+                        <button type="button" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 
 </body>
 

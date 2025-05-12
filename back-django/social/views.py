@@ -75,10 +75,10 @@ def get_user_by_supabase_id(request, supabase_id):
 
 
 @require_http_methods(["GET"])
-def get_user_posts(request, id):
-    user = get_object_or_404(User, id=id, deleted=False)
+def get_user_posts(request, supabase_id):
+    user = get_object_or_404(User, supabase_id=supabase_id, deleted=False)
     posts = Post.objects.filter(user=user, deleted=False).order_by('-date_uploaded')
-    paginator = Paginator(posts, 20)
+    paginator = Paginator(posts, 10)
     page = request.GET.get('page')
     posts = paginator.get_page(page).object_list
     serializer = PostSerializer(posts, many=True)
@@ -90,7 +90,7 @@ def get_user_posts(request, id):
 def get_post_comments(request, post_id):
     post = get_object_or_404(Post, id=post_id, deleted=False)
     comments = Comment.objects.filter(post=post, deleted=False).order_by('-date_uploaded')
-    paginator = Paginator(comments, 20)
+    paginator = Paginator(comments, 10)
     page = request.GET.get('page')
     comments = paginator.get_page(page).object_list
     serializer = CommentSerializer(comments, many=True)

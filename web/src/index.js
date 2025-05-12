@@ -13,6 +13,13 @@ profilePictureInput.addEventListener('change', changeFile);
 
 let user = null;
 
+let page = 1;
+let loading = false;
+const loader = document.getElementById('loader');
+
+let host = "localhost:8000/";
+
+
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN') {
     user = session.user;
@@ -21,6 +28,16 @@ supabase.auth.onAuthStateChange((event, session) => {
   }
 });
 
+
+function updateUIForLoggedInUser() {
+  const loginButton = document.getElementById('login-button');
+  /*   const logoutButton = document.getElementById('logout-button'); */
+  const profilePicture = document.getElementById('profile-picture');
+
+  loginButton.style.display = 'none';
+  /*   logoutButton.style.display = 'block'; */
+  profilePicture.style.display = 'block';
+}
 
 const signUpForm = document.getElementById('form-signup');
 signUpForm.addEventListener('submit', async function (event) {
@@ -44,7 +61,10 @@ signUpForm.addEventListener('submit', async function (event) {
   });
 
   if (data) {
-    
+    let myModal = new bootstrap.Modal(document.getElementById('modal-signup'))
+    myModal.hide()
+    updateUIForLoggedInUser();
+    createUser(data.user)
   } else {
   }
 });
@@ -85,6 +105,58 @@ async function getSessionToken() {
   return session?.access_token;
 }
 
-async function createUser() {
 
+function handleScroll() {
+  if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
+    if (loading) return;
+    loading = true;
+    try {
+
+      loadPosts('posts/latest', page);
+      loader.style.display = 'block';
+      if (posts.length === 0) {
+        return;
+      }
+
+      const postContainer = document.getElementById('posts');
+      posts.forEach(post => {
+        postContainer.innerHTML += `
+        <div class="card w-25 mx-auto mb-3 text-bg-dark border-subtle">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            ${post.user.nickname}
+                        </div>
+                        <div class="col-6 text-end">
+                            <p>${post.date_uploaded}</p>
+                        </div>
+                    </div> ` +
+          post.file_type === 'image' ?
+          `<img class="card-img-top"
+                        src="${post.file}"
+                        alt="Post image" />`
+
+          : post.file_type === 'video' ?
+            `video class="card-img-top"
+                        src="${post.file}" />`
+
+            : ''
+            +
+            `<p class="card-text">${post.text}</p>
+                </div>
+            </div>
+      `
+      });
+    } catch (error) {
+      postContainer.innerHTML = `
+        <div class="alert alert-danger" role="alert">
+            Error loading posts
+        </div>
+      `;
+    }
+  }
 }
+
+window.addEventListener('scroll', handleScroll);
+
+loadPosts();

@@ -7,3 +7,14 @@
 #image-upload:hover {
   cursor: pointer;
 }
+
+.border-subtle {
+  border: 1px solid #4b4b4b;
+  border-radius: 4px;
+}
+
+
+.border-bottom-subtle {
+  border-bottom: 1px solid #4b4b4b;
+  border-radius: 4px;
+}
