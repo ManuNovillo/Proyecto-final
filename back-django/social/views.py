@@ -2,10 +2,14 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_http_methods
+from django.db import connection
 from functools import wraps
 
 import jwt
 from jwt import InvalidTokenError
+
+from social.serializers import PostSerializer, UserSerializer, CommentSerializer
+from social.models import Post, User, Comment
 
 import os
 
@@ -14,7 +18,7 @@ SECRET_KEY = os.getenv('SECRET_KEY_SUPABASE')
 ALGORITHM = "HS256"
 AUDIENCE = "authenticated"
 
-def verify_supabase_token(token):
+def get_token_data(token):
     if SECRET_KEY is None:
         return None
     try:
@@ -24,30 +28,29 @@ def verify_supabase_token(token):
             algorithms=[ALGORITHM],
             audience=AUDIENCE
         )
-        return decoded  # contiene el sub (id del usuario), email, etc.
+        return decoded
     except InvalidTokenError as e:
-        print("Token inválido:", str(e))
         return None
-from social.serializers import PostSerializer, UserSerializer, CommentSerializer
-from social.models import Post, User, Comment
 
 
-
-def require_supabase_token(view_func):
-    @wraps(view_func)
-    def wrapper(request, *args, **kwargs):
-        auth = request.headers.get('Authorization', '')
-        if not auth.startswith('Bearer '):
-            return JsonResponse({'error': 'Token no encontrado'}, status=401)
-        token = auth.split(' ')[1]
-        payload = verify_supabase_token(token)
-        if not payload:
-            return JsonResponse({'error': 'Token inválido'}, status=401)
-        request.user_payload = payload
-        return view_func(request, *args, **kwargs)
-    return wrapper
-
-
+def get_user_from_token(request):
+    auth = request.headers.get('Authorization', '')
+    if not auth.startswith('Bearer '):
+        return None
+    token = auth.split(' ')[1]
+    token_data = get_token_data(token)
+    if token_data is None:
+        return None
+    supabase_id = token_data.get('sub')
+    if supabase_id is None:
+        return None
+    try:
+        user = User.objects.get(supabase_id=supabase_id, deleted=False)
+        return user
+    except User.DoesNotExist:
+        return None
+    
+    
 @require_http_methods(["POST"])
 def create_user(request):
     serializer = UserSerializer(data=request.POST)
@@ -55,7 +58,6 @@ def create_user(request):
         serializer.save()
         return JsonResponse(serializer.data, status=201)
     return JsonResponse(serializer.errors, status=400)
-
 
 
 @require_http_methods(["GET"])
@@ -66,6 +68,17 @@ def get_latest_posts(request):
     serializer = PostSerializer(posts, many=True)
     return JsonResponse(serializer.data, safe=False)
 
+
+@require_http_methods(["GET"])
+def get_latest_posts_following(request):
+    user = get_user_from_token(request)
+    if user is None:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+    paginator = Paginator(Post.objects.filter(deleted=False, user__in=user.following).order_by('-date_uploaded').values(), 20)
+    page = request.GET.get('page')
+    posts = paginator.get_page(page).object_list
+    serializer = PostSerializer(posts, many=True)
+    return JsonResponse(serializer.data, safe=False)
 
 @require_http_methods(["GET"])
 def get_user_by_supabase_id(request, supabase_id):
@@ -83,7 +96,6 @@ def get_user_posts(request, supabase_id):
     posts = paginator.get_page(page).object_list
     serializer = PostSerializer(posts, many=True)
     return JsonResponse(serializer.data, safe=False)
-
 
 
 @require_http_methods(["GET"])
@@ -126,4 +138,3 @@ def upload_comment(request):
         serializer.save()
         return JsonResponse(serializer.data, status=201)
     return JsonResponse(serializer.errors, status=400)
-

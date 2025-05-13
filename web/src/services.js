@@ -1,4 +1,6 @@
-async function createUser(user) {
+let host = "http://localhost:8000/";
+
+export async function createUser(user) {
     fetch('localhost:8000/users/create', {
         method: 'POST',
         headers: {
@@ -14,14 +16,18 @@ async function createUser(user) {
         });
 }
 
-async function createPost() {
-
+export async function createPost() {
+    
 }
 
-async function loadPosts(url, page) {
-
+export async function loadPosts(url, page) {
     const response = await fetch(`${host}${url}?page=${page}`);
     const posts = await response.json();
     return posts;
+}
 
+export async function getUser(supabaseId) {
+    const response = await fetch(`${host}/users/${supabaseId}`);
+    const user = await response.json();
+    return user;
 }

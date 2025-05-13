@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
+import { getUser } from './services.js'
 
 console.log('Hello World!');
 
@@ -17,8 +18,6 @@ let page = 1;
 let loading = false;
 const loader = document.getElementById('loader');
 
-let host = "localhost:8000/";
-
 
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN') {
@@ -29,15 +28,6 @@ supabase.auth.onAuthStateChange((event, session) => {
 });
 
 
-function updateUIForLoggedInUser() {
-  const loginButton = document.getElementById('login-button');
-  /*   const logoutButton = document.getElementById('logout-button'); */
-  const profilePicture = document.getElementById('profile-picture');
-
-  loginButton.style.display = 'none';
-  /*   logoutButton.style.display = 'block'; */
-  profilePicture.style.display = 'block';
-}
 
 const signUpForm = document.getElementById('form-signup');
 signUpForm.addEventListener('submit', async function (event) {
@@ -60,11 +50,11 @@ signUpForm.addEventListener('submit', async function (event) {
     "password": password,
   });
 
-  if (data) {
+  if (data.user) {
     let myModal = new bootstrap.Modal(document.getElementById('modal-signup'))
     myModal.hide()
     updateUIForLoggedInUser();
-    createUser(data.user)
+    let user = createUser(data.user)
   } else {
   }
 });
@@ -80,15 +70,44 @@ loginForm.addEventListener('submit', async function (event) {
     "password": password,
   });
 
-  if (error) {
-    errorText.textContent = "Error al iniciar sesión";
-    console.error('Error:', error.message);
+  if (data.user) {
+    console.log('User logged in:', data);
+    let modalLogin = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-login'))
+    getUser(data.user.id).then(userFetched => {
+      user = userFetched;
+    }).catch(error => {
+      console.error('Error fetching user:', error);
+    });
+    modalLogin.hide()
+    updateUIForLoggedInUser();
   } else {
-    console.log('Success:', data);
-    access_token = data.session.access_token;
-    console.log('aaaaaaaaa');
+    errorText.textContent = 'Error al iniciar sesión';
+    console.error('Error logging in:', error);
   }
 });
+
+function updateUIForLoggedInUser() {
+  if (user === null) {
+    console.log('User is null');
+    return;
+  }
+  const loginButton = document.getElementById('login-button');
+  const profilePictureDiv = document.getElementById('profile-picture-div');
+  const profileTitle = document.getElementById('profile-title');
+  const profilePicture = document.querySelectorAll('.profile-picture');
+
+  loginButton.style.display = 'none';
+  profilePictureDiv.style.display = 'block';
+  profileTitle.textContent = `${user.nickname}`;
+  profilePicture.forEach(picture => {
+    console.log('User profile picture:', user.profile_picture);
+    if (user.profile_picture !== null && user.profile_picture !== undefined)
+      picture.src = user.profile_picture;
+    else
+      picture.src = 'https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/profilepictures//default-profile-picture.png';
+  });
+}
+
 
 async function changeFile() {
   console.log('File changed!');
@@ -107,21 +126,21 @@ async function getSessionToken() {
 
 
 function handleScroll() {
+  return;
   if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
     if (loading) return;
     loading = true;
+    const postContainer = document.getElementById('posts');
     try {
-
-      loadPosts('posts/latest', page);
+      posts = loadPosts('posts/latest', page);
       loader.style.display = 'block';
       if (posts.length === 0) {
         return;
       }
 
-      const postContainer = document.getElementById('posts');
       posts.forEach(post => {
         postContainer.innerHTML += `
-        <div class="card w-25 mx-auto mb-3 text-bg-dark border-subtle">
+        <div class="card mx-auto mb-3 text-bg-dark border-subtle">
                 <div class="card-body">
                     <div class="row">
                         <div class="col-6">
@@ -158,5 +177,3 @@ function handleScroll() {
 }
 
 window.addEventListener('scroll', handleScroll);
-
-loadPosts();
