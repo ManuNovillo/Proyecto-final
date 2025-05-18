@@ -1,19 +1,25 @@
 let host = "http://localhost:8000/";
 
-export async function createUser(user) {
-    fetch('localhost:8000/users/create', {
+async function getSessionToken() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token;
+}
+
+export async function createUser(userData) {
+    const response = fetch(`${host}users/create`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({
+            "email" : userData.email,
+            "supabase_id" : userData.id,
+            "nickname" : userData.nickname,
+            
+        }),
     })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Success:', data);
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-        });
+    const user = await response.json();
+    return user;
 }
 
 export async function createPost() {
@@ -27,7 +33,7 @@ export async function loadPosts(url, page) {
 }
 
 export async function getUser(supabaseId) {
-    const response = await fetch(`${host}/users/${supabaseId}`);
+    const response = await fetch(`${host}users/${supabaseId}`);
     const user = await response.json();
     return user;
 }

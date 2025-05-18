@@ -37,8 +37,23 @@
     </header>
     <main class="text-white mt-5">
         <div class="col-lg-4 mx-auto">
-            <form id="post-form" class="text-center" novalidate>
-                <textarea class="bg-dark border-subtle w-100 text-white" name="post-text" id="post-text" placeholder="Di lo que estás pensando"></textarea>
+            <form id="post-form" novalidate>
+                <textarea class="bg-dark border-subtle w-100 text-white" name="post-text" id="post-text"
+                    placeholder="Di lo que estás pensando" maxlength="300"></textarea>
+                <div class="row justify-content-between align-items-center">
+                    <div class="col-6">
+                        <div class="position-relative d-inline-block mx-auto">
+                            <label for="post-file-input" class="position-absolute bottom-0 start-0 me-2 mb-1">
+                                <i class="fa fa-image text-white rounded-circle bg-black p-2 image-upload"
+                                    aria-hidden="true"></i>
+                            </label>
+                            <input class="file-input" id="post-file-input" type="file" />
+                        </div>
+                    </div>
+                    <div class="col-6 text-end">
+                        <button type="submit" class="btn btn-success mt-1 mb-3">Publicar</button>
+                    </div>
+                </div>
             </form>
             <div id="posts">
                 <div class="card mx-auto mb-3 text-bg-dark border-subtle">
@@ -67,18 +82,21 @@
                         <img class="card-img-top"
                             src="https://www.wnct.com/wp-content/uploads/sites/99/2022/07/Cat.jpg?w=2560&h=1440&crop=1"
                             alt="Title" />
-                        <p class="card-text">Lorem ipsum dolor sit amet consectetur adipisicing elit. Ducimus a voluptates nisi consectetur beatae pariatur incidunt delectus natus, dignissimos, doloremque exercitationem saepe voluptatem quisquam nesciunt nemo et sint odio libero. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quibusdam dolorem autem ipsam cumque vel, tempore dolores earum ducimus placeat non impedit quidem optio fugiat repellat ullam esse doloribus rerum maxime! Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolores et minus inventore architecto. Ullam delectus ipsum blanditiis explicabo odit accusamus laudantium incidunt, amet deserunt labore nam expedita! Accusamus, repellat tempora.</p>
+                        <p class="card-text">Lorem ipsum dolor sit amet consectetur adipisicing elit. Ducimus a
+                            voluptates nisi consectetur beatae pariatur incidunt delectus natus, dignissimos, doloremque
+                            exercitationem saepe voluptatem quisquam nesciunt nemo et sint odio libero. Lorem ipsum
+                            dolor sit amet consectetur adipisicing elit. Quibusdam dolorem autem ipsam cumque vel,
+                            tempore dolores earum ducimus placeat non impedit quidem optio fugiat repellat ullam esse
+                            doloribus rerum maxime! Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolores et
+                            minus inventore architecto. Ullam delectus ipsum blanditiis explicabo odit accusamus
+                            laudantium incidunt, amet deserunt labore nam expedita! Accusamus, repellat tempora.</p>
                     </div>
                 </div>
             </div>
         </div>
-
-
-
-        <button data-bs-toggle="modal" data-bs-target="#postmodal">Postear</button>
     </main>
     <footer>
-        <!-- place footer here -->
+        <div id="loader"></div>
     </footer>
     <!-- Bootstrap JavaScript Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
@@ -145,6 +163,10 @@
                             <input type="email" class="rounded-2 border-0 p-1" id="email-signup" />
                         </div>
                         <div class="mb-4">
+                            <label for="nickname">Nickname</label>
+                            <input type="text" class="rounded-2 border-0 p-1" id="nickname" />
+                        </div>
+                        <div class="mb-4">
                             <label for="password-signup">Contraseña</label>
                             <input type="password" class="rounded-2 border-0 p-1" id="password-signup" />
                         </div>
@@ -179,11 +201,11 @@
                         <div class="position-relative d-inline-block mx-auto">
                             <img class="profile-picture" src="" width="300" height="300" alt="Logo"
                                 class="rounded-circle border border-2 border-dark" />
-                            <label for="file-input" class="position-absolute bottom-0 end-0 me-2 mb-1">
-                                <i id="image-upload" class="fa fa-pencil text-white rounded-circle bg-black p-2"
+                            <label for="profile-picture-input" class="position-absolute bottom-0 end-0 me-2 mb-1">
+                                <i class="fa fa-pencil text-white rounded-circle bg-black p-2 image-upload"
                                     aria-hidden="true"></i>
                             </label>
-                            <input id="file-input" type="file" />
+                            <input class="file-input" id="profile-picture-input" type="file" />
                         </div>
                     </div>
                     <br>

@@ -8,7 +8,7 @@ from functools import wraps
 import jwt
 from jwt import InvalidTokenError
 
-from social.serializers import PostSerializer, UserSerializer, CommentSerializer
+from social.serializers import PostSerializer, UserSerializer, CommentSerializer, UserCreateSerializer, PostCreateSerializer, CommentCreateSerializer
 from social.models import Post, User, Comment
 
 import os
@@ -53,7 +53,7 @@ def get_user_from_token(request):
     
 @require_http_methods(["POST"])
 def create_user(request):
-    serializer = UserSerializer(data=request.POST)
+    serializer = UserCreateSerializer(data=request.POST)
     if serializer.is_valid():
         serializer.save()
         return JsonResponse(serializer.data, status=201)

@@ -1,22 +1,22 @@
 import { createClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
-import { getUser } from './services.js'
-
-console.log('Hello World!');
+import { getUser, createUser } from './services.js'
 
 const supabaseUrl = 'https://mwxwlheqcworkzgnkgwj.supabase.co'
 const supabaseToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13eHdsaGVxY3dvcmt6Z25rZ3dqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDY2MjAsImV4cCI6MjA2MjAyMjYyMH0.jyWmJI1qxa4MAl5JSh_Bb7fNjEAHwrwdjSC_8hRkoyo'
 
 const supabase = createClient(supabaseUrl, supabaseToken)
 
-const profilePictureInput = document.querySelector('input[type=file]');
-profilePictureInput.addEventListener('change', changeFile);
+const defaultUserPicture = 'https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/profilepictures//default-profile-picture.png'
 
 let user = null;
 
 let page = 1;
 let loading = false;
 const loader = document.getElementById('loader');
+
+var fileInput = document.getElementById('upload');   
+//var filename = fileInput.files[0].name;
 
 
 supabase.auth.onAuthStateChange((event, session) => {
@@ -27,13 +27,67 @@ supabase.auth.onAuthStateChange((event, session) => {
   }
 });
 
+window.addEventListener('scroll', handleScroll);
 
+const profilePictureInput = document.getElementById('profile-picture-input');
+profilePictureInput.addEventListener('change', handleProfilePictureChange);
+
+async function handleProfilePictureChange() {
+  console.log('File changed!');
+  const file = profilePictureInput.files[0];
+  const uuid = uuidv4();
+  const { data, error } = supabase.storage.from('profilepictures').upload(`${uuid}`, file)
+  if (data) {
+    console.log('File uploaded successfully:', data);
+  }
+  else if (error) {
+    console.error('Error uploading file:', error);
+  }
+}
+
+const postFileInput = document.getElementById('post-file-input');
+postFileInput.addEventListener('change', handlePostFileChange);
+
+async function handlePostFileChange() {
+  console.log('File changed!');
+  const file = postFileInput.files[0];
+  const uuid = uuidv4();
+  const { data, error } = supabase.storage.from('posts').upload(`${uuid}`, file)
+  if (data) {
+    console.log('File uploaded successfully:', data);
+  }
+}
+
+const createPostForm = document.getElementById('post-form');
+createPostForm.addEventListener('submit', async function (event) {
+  event.preventDefault();
+  const text = document.getElementById('post-text').value;
+  const file = document.getElementById('post-file-input').files[0];
+  if (text.length > 500) {
+    errorText.textContent = 'El texto no puede exceder los 500 caracteres';
+    return;
+  }
+  const uuid = uuidv4();
+  const { data, error } = await supabase.storage.from('posts').upload(`${uuid}`, file);
+  console.log("Full path", data.fullPath);
+  console.log("File name", data.name);
+  console.log("File type", data.type);
+  if (data) {
+    console.log('File uploaded successfully:', data);
+    console.log('Post created successfully');
+    createPostForm.reset();
+  } else {
+    errorText.textContent = 'Error al subir el archivo';
+    console.error('Error uploading file:', error);
+  }
+});
 
 const signUpForm = document.getElementById('form-signup');
 signUpForm.addEventListener('submit', async function (event) {
   event.preventDefault();
   const email = document.getElementById('email-signup').value;
   const password = document.getElementById('password-signup').value;
+  const nickname = document.getElementById('nickname').value;
   const confirmPassword = document.getElementById('confirm-password-signup').value;
   const errorText = document.getElementById('signup-error');
   if (password.length < 8) {
@@ -51,11 +105,24 @@ signUpForm.addEventListener('submit', async function (event) {
   });
 
   if (data.user) {
-    let myModal = new bootstrap.Modal(document.getElementById('modal-signup'))
+    let myModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-signup'))
     myModal.hide()
-    updateUIForLoggedInUser();
-    let user = createUser(data.user)
+    try {
+      user = createUser(
+        {
+          "email": email,
+          "supabase_id": data.user.id,
+          "nickname": nickname
+        }
+      ) 
+      updateUIForLoggedInUser();
+    } catch (exception) {
+      console.error('Error creating user:', exception);
+      errorText.textContent = 'Error al crear el usuario';
+    }
   } else {
+      console.error('Error creating user:', error);
+      errorText.textContent = 'Error al crear el usuario';
   }
 });
 
@@ -100,39 +167,22 @@ function updateUIForLoggedInUser() {
   profilePictureDiv.style.display = 'block';
   profileTitle.textContent = `${user.nickname}`;
   profilePicture.forEach(picture => {
-    console.log('User profile picture:', user.profile_picture);
     if (user.profile_picture !== null && user.profile_picture !== undefined)
       picture.src = user.profile_picture;
     else
-      picture.src = 'https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/profilepictures//default-profile-picture.png';
+      picture.src = defaultUserPicture;
   });
 }
 
-
-async function changeFile() {
-  console.log('File changed!');
-  const file = profilePictureInput.files[0];
-  const uuid = uuidv4();
-  const { data, error } = supabase.storage.from('posts').upload(`${uuid}`, file)
-  if (data) {
-    console.log('File uploaded successfully:', data);
-  }
-}
-
-async function getSessionToken() {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token;
-}
-
-
 function handleScroll() {
-  return;
+/*   return; */
   if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
     if (loading) return;
     loading = true;
     const postContainer = document.getElementById('posts');
     try {
-      posts = loadPosts('posts/latest', page);
+/*       const posts = loadPosts('posts/latest', page); */
+      const posts = []
       loader.style.display = 'block';
       if (posts.length === 0) {
         return;
@@ -144,7 +194,7 @@ function handleScroll() {
                 <div class="card-body">
                     <div class="row">
                         <div class="col-6">
-                            ${post.user.nickname}
+                            <a href=''>${post.user.nickname}</a>
                         </div>
                         <div class="col-6 text-end">
                             <p>${post.date_uploaded}</p>
@@ -175,5 +225,3 @@ function handleScroll() {
     }
   }
 }
-
-window.addEventListener('scroll', handleScroll);
