@@ -11,6 +11,15 @@ const defaultUserPicture = 'https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/
 
 let user = null;
 
+if (localStorage.getItem('sb-mwxwlheqcworkzgnkgwj-auth-token') !== null) {
+  const token = JSON.parse(localStorage.getItem('sb-mwxwlheqcworkzgnkgwj-auth-token'));
+  console.log('Token:', token.user);
+  user = getUser(token.user.id);
+  console.log('User:', user);
+} else {
+  console.log('No session found in local storage');
+}
+
 let page = 1;
 let loading = false;
 const loader = document.getElementById('loader');
@@ -24,6 +33,82 @@ supabase.auth.onAuthStateChange((event, session) => {
     user = session.user;
   } else if (event === 'SIGNED_OUT') {
     user = null;
+  }
+});
+
+const signUpForm = document.getElementById('form-signup');
+signUpForm.addEventListener('submit', async function (event) {
+  event.preventDefault();
+  const email = document.getElementById('email-signup').value;
+  const password = document.getElementById('password-signup').value;
+  const nickname = document.getElementById('nickname').value;
+  const confirmPassword = document.getElementById('confirm-password-signup').value;
+  const errorText = document.getElementById('signup-error');
+  if (password.length < 8) {
+    errorText.textContent = 'La contraseña debe tener al menos 8 caracteres';
+    return;
+  }
+  if (password !== confirmPassword) {
+    errorText.textContent = 'Las contraseñas no coinciden';
+    return;
+  }
+
+  const { data, error } = await supabase.auth.signUp({
+    "email": email,
+    "password": password,
+  });
+
+  if (data.user) {
+    console.log('User signed up:', data.user);
+    console.log('User id:', data.user.id);
+    let myModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-signup'))
+    myModal.hide()
+    try {
+      user = createUser(
+        {
+          "email": email,
+          "supabase_id": data.user.id,
+          "nickname": nickname
+        }
+      ) 
+      console.log('User created:', user);
+      updateUIForLoggedInUser();
+    } catch (exception) {
+      console.error('Error creating user:', exception);
+      errorText.textContent = 'Error al crear el usuario';
+    }
+  } else {
+      console.error('Error creating user:', error);
+      errorText.textContent = 'Error al crear el usuario';
+  }
+});
+
+const loginForm = document.getElementById('form-login');
+loginForm.addEventListener('submit', async function (event) {
+  event.preventDefault();
+  const email = document.getElementById('email-login').value;
+  const password = document.getElementById('password-login').value;
+  const errorText = document.getElementById('login-error');
+  const { data, error } = await supabase.auth.signInWithPassword({
+    "email": email,
+    "password": password,
+  });
+
+  if (data.user) {
+    console.log('User logged in:', data);
+    let modalLogin = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-login'))
+    try {
+      user = getUser(data.user.id);
+      modalLogin.hide()
+      updateUIForLoggedInUser();
+      console.log('User data:', user);
+    } catch (exception) {
+      errorText.textContent = 'Error al iniciar sesión';
+      console.error('Error logging in:', error);
+    }
+  } else {
+    errorText.textContent = 'Error al iniciar sesión';
+    console.error('Error logging in:', error);
   }
 });
 
@@ -82,76 +167,6 @@ createPostForm.addEventListener('submit', async function (event) {
   }
 });
 
-const signUpForm = document.getElementById('form-signup');
-signUpForm.addEventListener('submit', async function (event) {
-  event.preventDefault();
-  const email = document.getElementById('email-signup').value;
-  const password = document.getElementById('password-signup').value;
-  const nickname = document.getElementById('nickname').value;
-  const confirmPassword = document.getElementById('confirm-password-signup').value;
-  const errorText = document.getElementById('signup-error');
-  if (password.length < 8) {
-    errorText.textContent = 'La contraseña debe tener al menos 8 caracteres';
-    return;
-  }
-  if (password !== confirmPassword) {
-    errorMessage.textContent = 'Las contraseñas no coinciden';
-    return;
-  }
-
-  const { data, error } = await supabase.auth.signUp({
-    "email": email,
-    "password": password,
-  });
-
-  if (data.user) {
-    let myModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-signup'))
-    myModal.hide()
-    try {
-      user = createUser(
-        {
-          "email": email,
-          "supabase_id": data.user.id,
-          "nickname": nickname
-        }
-      ) 
-      updateUIForLoggedInUser();
-    } catch (exception) {
-      console.error('Error creating user:', exception);
-      errorText.textContent = 'Error al crear el usuario';
-    }
-  } else {
-      console.error('Error creating user:', error);
-      errorText.textContent = 'Error al crear el usuario';
-  }
-});
-
-const loginForm = document.getElementById('form-login');
-loginForm.addEventListener('submit', async function (event) {
-  event.preventDefault();
-  const email = document.getElementById('email-login').value;
-  const password = document.getElementById('password-login').value;
-  const errorText = document.getElementById('login-error');
-  const { data, error } = await supabase.auth.signInWithPassword({
-    "email": email,
-    "password": password,
-  });
-
-  if (data.user) {
-    console.log('User logged in:', data);
-    let modalLogin = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-login'))
-    getUser(data.user.id).then(userFetched => {
-      user = userFetched;
-    }).catch(error => {
-      console.error('Error fetching user:', error);
-    });
-    modalLogin.hide()
-    updateUIForLoggedInUser();
-  } else {
-    errorText.textContent = 'Error al iniciar sesión';
-    console.error('Error logging in:', error);
-  }
-});
 
 function updateUIForLoggedInUser() {
   if (user === null) {

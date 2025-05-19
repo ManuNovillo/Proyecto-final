@@ -1,9 +1,10 @@
-from django.http import JsonResponse
+import json
+from django.http import HttpRequest, JsonResponse
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
-from django.views.decorators.http import require_http_methods
-from django.db import connection
-from functools import wraps
+from django.views.decorators.csrf import csrf_exempt
+
+from rest_framework.decorators import api_view
 
 import jwt
 from jwt import InvalidTokenError
@@ -50,17 +51,18 @@ def get_user_from_token(request):
     except User.DoesNotExist:
         return None
     
-    
-@require_http_methods(["POST"])
+@api_view(["POST"])
 def create_user(request):
-    serializer = UserCreateSerializer(data=request.POST)
+    print(request.data)
+    serializer = UserCreateSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return JsonResponse(serializer.data, status=201)
+    print(serializer.errors)
     return JsonResponse(serializer.errors, status=400)
 
 
-@require_http_methods(["GET"])
+@api_view(["GET"])
 def get_latest_posts(request):
     paginator = Paginator(Post.objects.filter(deleted=False).order_by('-date_uploaded').values(), 20)
     page = request.GET.get('page')
@@ -69,7 +71,7 @@ def get_latest_posts(request):
     return JsonResponse(serializer.data, safe=False)
 
 
-@require_http_methods(["GET"])
+@api_view(["GET"])
 def get_latest_posts_following(request):
     user = get_user_from_token(request)
     if user is None:
@@ -80,14 +82,14 @@ def get_latest_posts_following(request):
     serializer = PostSerializer(posts, many=True)
     return JsonResponse(serializer.data, safe=False)
 
-@require_http_methods(["GET"])
+@api_view(["GET"])
 def get_user_by_supabase_id(request, supabase_id):
     user = get_object_or_404(User, supabase_id=supabase_id, deleted=False)
     serializer = UserSerializer(user)
     return JsonResponse(serializer.data, safe=False)
 
 
-@require_http_methods(["GET"])
+@api_view(["GET"])
 def get_user_posts(request, supabase_id):
     user = get_object_or_404(User, supabase_id=supabase_id, deleted=False)
     posts = Post.objects.filter(user=user, deleted=False).order_by('-date_uploaded')
@@ -98,7 +100,7 @@ def get_user_posts(request, supabase_id):
     return JsonResponse(serializer.data, safe=False)
 
 
-@require_http_methods(["GET"])
+@api_view(["GET"])
 def get_post_comments(request, post_id):
     post = get_object_or_404(Post, id=post_id, deleted=False)
     comments = Comment.objects.filter(post=post, deleted=False).order_by('-date_uploaded')
@@ -109,8 +111,7 @@ def get_post_comments(request, post_id):
     return JsonResponse(serializer.data, safe=False)
 
 
-@require_http_methods(["POST"])
-@require_supabase_token
+@api_view(["POST"])
 def upload_post(request):
     serializer = PostSerializer(data=request.POST)
     if serializer.is_valid():
@@ -119,8 +120,7 @@ def upload_post(request):
     return JsonResponse(serializer.errors, status=400)
 
 
-@require_http_methods(["PUT"])
-@require_supabase_token
+@api_view(["PUT"])
 def update_user_profile(request):
     user = get_object_or_404(User, id=request.POST.get('id'), deleted=False)
     serializer = UserSerializer(user, data=request.POST, partial=True)
@@ -130,8 +130,7 @@ def update_user_profile(request):
     return JsonResponse(serializer.errors, status=400)
 
 
-@require_http_methods(["POST"])
-@require_supabase_token
+@api_view(["POST"])
 def upload_comment(request):
     serializer = CommentSerializer(data=request.POST)
     if serializer.is_valid():

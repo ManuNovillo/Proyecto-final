@@ -6,19 +6,24 @@ async function getSessionToken() {
 }
 
 export async function createUser(userData) {
-    const response = fetch(`${host}users/create`, {
+    console.log("Creating user", userData.id);
+    const response = await fetch(`${host}users/create/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
             "email" : userData.email,
-            "supabase_id" : userData.id,
+            "supabase_id" : userData.supabase_id,
             "nickname" : userData.nickname,
             
         }),
     })
-    const user = await response.json();
+    if (!response.ok) {
+        console.error('Error creating user:', response.statusText);
+        throw new Error('Error creating user');
+    }
+    const user = response.json();
     return user;
 }
 
@@ -34,6 +39,10 @@ export async function loadPosts(url, page) {
 
 export async function getUser(supabaseId) {
     const response = await fetch(`${host}users/${supabaseId}`);
-    const user = await response.json();
+    if (!response.ok) {
+        console.error('Error getting user:', response.statusText);
+        throw new Error('Error getting user');
+    }
+    const user = response.json();
     return user;
 }
