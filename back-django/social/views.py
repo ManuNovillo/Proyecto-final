@@ -1,4 +1,4 @@
-import json
+from re import U
 from django.http import HttpRequest, JsonResponse
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
@@ -41,14 +41,17 @@ def get_user_from_token(request):
     token = auth.split(' ')[1]
     token_data = get_token_data(token)
     if token_data is None:
+        print("Token data is None")
         return None
     supabase_id = token_data.get('sub')
     if supabase_id is None:
+        print("Supabase ID is None")
         return None
     try:
         user = User.objects.get(supabase_id=supabase_id, deleted=False)
         return user
     except User.DoesNotExist:
+        print("User does not exist")
         return None
     
 @api_view(["POST"])
@@ -64,6 +67,7 @@ def create_user(request):
 
 @api_view(["GET"])
 def get_latest_posts(request):
+    print("kk")
     paginator = Paginator(Post.objects.filter(deleted=False).order_by('-date_uploaded').values(), 20)
     page = request.GET.get('page')
     posts = paginator.get_page(page).object_list
@@ -81,6 +85,7 @@ def get_latest_posts_following(request):
     posts = paginator.get_page(page).object_list
     serializer = PostSerializer(posts, many=True)
     return JsonResponse(serializer.data, safe=False)
+
 
 @api_view(["GET"])
 def get_user_by_supabase_id(request, supabase_id):
@@ -112,18 +117,26 @@ def get_post_comments(request, post_id):
 
 
 @api_view(["POST"])
-def upload_post(request):
-    serializer = PostSerializer(data=request.POST)
+def create_post(request):
+    print(request.data)
+    print("dadad")
+    user = get_user_from_token(request)
+    if (user is None):
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+    serializer = PostCreateSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return JsonResponse(serializer.data, status=201)
+    print(serializer.errors)
     return JsonResponse(serializer.errors, status=400)
 
 
 @api_view(["PUT"])
-def update_user_profile(request):
-    user = get_object_or_404(User, id=request.POST.get('id'), deleted=False)
-    serializer = UserSerializer(user, data=request.POST, partial=True)
+def update_user_profile(request, id):
+    print(id)
+    print(User.objects.filter(id=id, deleted=False).values())
+    user = get_object_or_404(User, id=id, deleted=False)
+    serializer = UserSerializer(user, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
         return JsonResponse(serializer.data, status=200)
@@ -137,3 +150,12 @@ def upload_comment(request):
         serializer.save()
         return JsonResponse(serializer.data, status=201)
     return JsonResponse(serializer.errors, status=400)
+
+
+@api_view(["GET"])
+def get_user_by_nickname(request, nickname):
+    print(nickname)
+    print("dadadd")
+    user = get_object_or_404(User, nickname=nickname, deleted=False)
+    serializer = UserSerializer(user)
+    return JsonResponse(serializer.data, safe=False)

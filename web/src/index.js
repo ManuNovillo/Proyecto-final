@@ -1,20 +1,31 @@
 import { createClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
-import { getUser, createUser } from './services.js'
+import { getUser, createUser, updateUser, createPost, getUserByName } from './services.js'
 
 const supabaseUrl = 'https://mwxwlheqcworkzgnkgwj.supabase.co'
 const supabaseToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13eHdsaGVxY3dvcmt6Z25rZ3dqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDY2MjAsImV4cCI6MjA2MjAyMjYyMH0.jyWmJI1qxa4MAl5JSh_Bb7fNjEAHwrwdjSC_8hRkoyo'
 
-const supabase = createClient(supabaseUrl, supabaseToken)
+export const supabase = createClient(supabaseUrl, supabaseToken)
 
 const defaultUserPicture = 'https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/profilepictures//default-profile-picture.png'
 
 let user = null;
 
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN') {
+    console.log('User signed in auth state:', session);
+    user = await getUser(session.user.id);
+    console.log('User:', user);
+  } else if (event === 'SIGNED_OUT') {
+    user = null;
+  }
+});
+
 if (localStorage.getItem('sb-mwxwlheqcworkzgnkgwj-auth-token') !== null) {
   const token = JSON.parse(localStorage.getItem('sb-mwxwlheqcworkzgnkgwj-auth-token'));
   console.log('Token:', token.user);
-  user = getUser(token.user.id);
+  user = await getUser(token.user.id);
+  updateUIForLoggedInUser();
   console.log('User:', user);
 } else {
   console.log('No session found in local storage');
@@ -24,15 +35,34 @@ let page = 1;
 let loading = false;
 const loader = document.getElementById('loader');
 
-var fileInput = document.getElementById('upload');   
+var fileInput = document.getElementById('upload');
 //var filename = fileInput.files[0].name;
 
-
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN') {
-    user = session.user;
-  } else if (event === 'SIGNED_OUT') {
-    user = null;
+const searchUserForm = document.getElementById('form-search-user');
+searchUserForm.addEventListener('submit', async function (event) {
+  event.preventDefault();
+  const searchInput = document.getElementById('search-user-input').value;
+  const errorText = document.getElementById('search-user-error');
+  if (searchInput.length == 0) {
+    errorText.textContent = 'Introduce un nombre de usuario';
+    return;
+  }
+  try {
+    const userFound = await getUserByName(searchInput);
+    errorText.textContent = '';
+    console.log('User found:', userFound);
+    const userContainer = document.getElementById('user-data');
+    userContainer.style.display = 'block';
+    postCreateForm.style.display = 'none';
+    const img = userContainer.querySelector("img")
+    img.src = userFound.profile_picture ? userFound.profile_picture : defaultUserPicture;
+    const userFoundName = userContainer.querySelector('h3');
+    userFoundName.textContent = userFound.nickname;
+    const userFoundDescription = userContainer.querySelector('p');
+    userFoundDescription.textContent = userFound.description ? userFound.description : '';
+  } catch (exception) {
+    errorText.textContent = 'Error al buscar el usuario';
+    console.error('Error searching user:', exception);
   }
 });
 
@@ -64,13 +94,13 @@ signUpForm.addEventListener('submit', async function (event) {
     let myModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-signup'))
     myModal.hide()
     try {
-      user = createUser(
+      user = await createUser(
         {
           "email": email,
           "supabase_id": data.user.id,
           "nickname": nickname
         }
-      ) 
+      )
       console.log('User created:', user);
       updateUIForLoggedInUser();
     } catch (exception) {
@@ -78,8 +108,8 @@ signUpForm.addEventListener('submit', async function (event) {
       errorText.textContent = 'Error al crear el usuario';
     }
   } else {
-      console.error('Error creating user:', error);
-      errorText.textContent = 'Error al crear el usuario';
+    console.error('Error creating user:', error);
+    errorText.textContent = 'Error al crear el usuario';
   }
 });
 
@@ -98,7 +128,7 @@ loginForm.addEventListener('submit', async function (event) {
     console.log('User logged in:', data);
     let modalLogin = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-login'))
     try {
-      user = getUser(data.user.id);
+      user = await getUser(data.user.id);
       modalLogin.hide()
       updateUIForLoggedInUser();
       console.log('User data:', user);
@@ -114,65 +144,79 @@ loginForm.addEventListener('submit', async function (event) {
 
 window.addEventListener('scroll', handleScroll);
 
-const profilePictureInput = document.getElementById('profile-picture-input');
-profilePictureInput.addEventListener('change', handleProfilePictureChange);
-
-async function handleProfilePictureChange() {
-  console.log('File changed!');
-  const file = profilePictureInput.files[0];
-  const uuid = uuidv4();
-  const { data, error } = supabase.storage.from('profilepictures').upload(`${uuid}`, file)
-  if (data) {
-    console.log('File uploaded successfully:', data);
-  }
-  else if (error) {
-    console.error('Error uploading file:', error);
-  }
-}
-
-const postFileInput = document.getElementById('post-file-input');
-postFileInput.addEventListener('change', handlePostFileChange);
-
-async function handlePostFileChange() {
-  console.log('File changed!');
-  const file = postFileInput.files[0];
-  const uuid = uuidv4();
-  const { data, error } = supabase.storage.from('posts').upload(`${uuid}`, file)
-  if (data) {
-    console.log('File uploaded successfully:', data);
-  }
-}
-
-const createPostForm = document.getElementById('post-form');
-createPostForm.addEventListener('submit', async function (event) {
+const profileForm = document.getElementById('form-profile');
+profileForm.addEventListener('submit', async function (event) {
   event.preventDefault();
-  const text = document.getElementById('post-text').value;
-  const file = document.getElementById('post-file-input').files[0];
-  if (text.length > 500) {
-    errorText.textContent = 'El texto no puede exceder los 500 caracteres';
-    return;
+  const file = document.getElementById('profile-picture-input').files[0];
+  let fileUrl;
+  if (file) {
+    const user_id = user.supabase_id;
+    const { data, error } = supabase.storage.from('profilepictures').upload(`${user_id}`, file, {
+      upsert: true
+    });
+    if (data) {
+      console.log('File uploaded successfully:', data);
+      fileUrl = `https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/profilepictures/${data.path}`;
+    }
+    else if (error) {
+      console.error('Error uploading file:', error);
+    }
   }
-  const uuid = uuidv4();
-  const { data, error } = await supabase.storage.from('posts').upload(`${uuid}`, file);
-  console.log("Full path", data.fullPath);
-  console.log("File name", data.name);
-  console.log("File type", data.type);
-  if (data) {
-    console.log('File uploaded successfully:', data);
-    console.log('Post created successfully');
-    createPostForm.reset();
-  } else {
-    errorText.textContent = 'Error al subir el archivo';
-    console.error('Error uploading file:', error);
+  const description = document.getElementById('profile-description').value;
+  try {
+    console.log('Updating user:', user);
+    user = await updateUser({
+      "id": user.id,
+      "description": description,
+      "profile_picture": fileUrl,
+    });
+    updateUIForLoggedInUser();
+  } catch (exception) {
+    console.error('Error updating user:', exception);
   }
 });
 
 
-function updateUIForLoggedInUser() {
-  if (user === null) {
-    console.log('User is null');
-    return;
+const postCreateForm = document.getElementById('post-create-form');
+postCreateForm.addEventListener('submit', async function (event) {
+  event.preventDefault();
+  const text = document.getElementById('post-text').value;
+  const file = document.getElementById('post-file-input').files[0];
+  const errorText = document.getElementById('post-error');
+  let fileUrl = null;
+  if (file) {
+    const uuid = uuidv4();
+    const { data, error } = await supabase.storage.from('posts').upload(`${uuid}`, file);
+    console.log("Full path", data.fullPath);
+    console.log("File name", data.name);
+    console.log("File type", data.type);
+    if (data) {
+      console.log('File uploaded successfully:', data);
+      console.log('Post created successfully');
+      postCreateForm.reset();
+      fileUrl = `https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/posts//${data.path}`;
+    } else {
+      errorText.textContent = 'Error al subir el archivo';
+      console.error('Error uploading file:', error);
+    }
   }
+  const fileType = file?.type.includes('image') ? 'image' : file?.type.includes('video') ? 'video' : 'none';
+  console.log('User:', user);
+  console.log('User id:', user.id);
+  createPost({
+    "user": user.id,
+    "text": text,
+    "file": fileUrl,
+    "file_type": fileType
+  }).then(() => {
+    console.log('Post created successfully');
+    postCreateForm.reset();
+  }).catch((error) => {
+    console.error('Error creating post:', error);
+  })
+});
+
+function updateUIForLoggedInUser() {
   const loginButton = document.getElementById('login-button');
   const profilePictureDiv = document.getElementById('profile-picture-div');
   const profileTitle = document.getElementById('profile-title');
@@ -182,7 +226,7 @@ function updateUIForLoggedInUser() {
   profilePictureDiv.style.display = 'block';
   profileTitle.textContent = `${user.nickname}`;
   profilePicture.forEach(picture => {
-    if (user.profile_picture !== null && user.profile_picture !== undefined)
+    if (user.profile_picture)
       picture.src = user.profile_picture;
     else
       picture.src = defaultUserPicture;
@@ -190,13 +234,12 @@ function updateUIForLoggedInUser() {
 }
 
 function handleScroll() {
-/*   return; */
   if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
     if (loading) return;
     loading = true;
     const postContainer = document.getElementById('posts');
     try {
-/*       const posts = loadPosts('posts/latest', page); */
+      /*       const posts = loadPosts('posts/latest', page); */
       const posts = []
       loader.style.display = 'block';
       if (posts.length === 0) {
@@ -223,7 +266,6 @@ function handleScroll() {
           : post.file_type === 'video' ?
             `video class="card-img-top"
                         src="${post.file}" />`
-
             : ''
             +
             `<p class="card-text">${post.text}</p>

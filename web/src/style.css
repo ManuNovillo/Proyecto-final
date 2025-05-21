@@ -14,7 +14,6 @@
   border-radius: 4px;
 }
 
-
 .border-bottom-subtle {
   border-bottom: 1px solid #4b4b4b;
   border-radius: 4px;
@@ -27,8 +26,8 @@
 #loader {
   display: none;
   margin: 20px auto;
-  border: 16px solid #212529;
-  border-top: 16px solid yellow;
+  border: 6px solid #212529;
+  border-top: 6px solid yellow;
   border-radius: 50%;
   width: 120px;
   height: 120px;
@@ -38,4 +37,8 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+img {
+  object-fit: cover;
 }
