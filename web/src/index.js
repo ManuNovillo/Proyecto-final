@@ -10,9 +10,10 @@ export const supabase = createClient(supabaseUrl, supabaseToken)
 const defaultUserPicture = 'https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/profilepictures//default-profile-picture.png'
 
 let user = null;
+let isCreatingAccount = false;
 
 supabase.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN') {
+  if (event === 'SIGNED_IN' && !isCreatingAccount) {
     console.log('User signed in auth state:', session);
     user = await getUser(session.user.id);
     console.log('User:', user);
@@ -61,7 +62,7 @@ searchUserForm.addEventListener('submit', async function (event) {
     const userFoundDescription = userContainer.querySelector('p');
     userFoundDescription.textContent = userFound.description ? userFound.description : '';
   } catch (exception) {
-    errorText.textContent = 'Error al buscar el usuario';
+    errorText.textContent = 'Uusuario no encontrado';
     console.error('Error searching user:', exception);
   }
 });
@@ -83,6 +84,7 @@ signUpForm.addEventListener('submit', async function (event) {
     return;
   }
 
+  isCreatingAccount = true;
   const { data, error } = await supabase.auth.signUp({
     "email": email,
     "password": password,
@@ -150,13 +152,13 @@ profileForm.addEventListener('submit', async function (event) {
   const file = document.getElementById('profile-picture-input').files[0];
   let fileUrl;
   if (file) {
+    console.log('File selected:', file);
     const user_id = user.supabase_id;
-    const { data, error } = supabase.storage.from('profilepictures').upload(`${user_id}`, file, {
-      upsert: true
-    });
+    supabase.storage.from('profilepictures').remove([`${user_id}`]);
+    const { data, error } = supabase.storage.from('profilepictures').upload(`${user_id}`, file, { upsert: true });
     if (data) {
       console.log('File uploaded successfully:', data);
-      fileUrl = `https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/profilepictures/${data.path}`;
+      fileUrl = `https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/profilepictures//${data.path}`;
     }
     else if (error) {
       console.error('Error uploading file:', error);
