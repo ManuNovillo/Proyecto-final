@@ -53,8 +53,8 @@ export async function createPost(post) {
     }
 }
 
-export async function loadPosts(url, page) {
-    const response = await fetch(`${host}${url}?page=${page}`);
+export async function loadPosts(url, date) {
+    const response = await fetch(`${host}${url}?date=${date}`);
     const posts = await response.json();
     return posts;
 }

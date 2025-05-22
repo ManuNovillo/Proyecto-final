@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { v4 as uuidv4 } from 'uuid'
-import { getUser, createUser, updateUser, createPost, getUserByName } from './services.js'
+import { getUser, createUser, updateUser, createPost, getUserByName, loadPosts } from './services.js'
 import { uploadProfilePicture } from './supabase_files.js'
 
 const supabaseUrl = 'https://mwxwlheqcworkzgnkgwj.supabase.co'
@@ -12,6 +11,9 @@ const defaultUserPicture = 'https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/
 
 let user = null;
 let isCreatingAccount = false;
+let dateLastPostRetrieved = Date.now();
+let loading = false;
+const loader = document.getElementById('loader');
 
 supabase.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && !isCreatingAccount) {
@@ -33,12 +35,6 @@ if (localStorage.getItem('sb-mwxwlheqcworkzgnkgwj-auth-token') !== null) {
   console.log('No session found in local storage');
 }
 
-let page = 1;
-let loading = false;
-const loader = document.getElementById('loader');
-
-var fileInput = document.getElementById('upload');
-//var filename = fileInput.files[0].name;
 
 const searchUserForm = document.getElementById('form-search-user');
 searchUserForm.addEventListener('submit', async function (event) {
@@ -57,7 +53,7 @@ searchUserForm.addEventListener('submit', async function (event) {
     userContainer.style.display = 'block';
     postCreateForm.style.display = 'none';
     const img = userContainer.querySelector("img")
-    img.src = userFound.profile_picture ? userFound.profile_picture : defaultUserPicture;
+    img.src = userFound.profile_picture ? `${userFound.profile_picture}?t=${Date.now()}`: defaultUserPicture;
     const userFoundName = userContainer.querySelector('h3');
     userFoundName.textContent = userFound.nickname;
     const userFoundDescription = userContainer.querySelector('p');
@@ -178,25 +174,24 @@ postCreateForm.addEventListener('submit', async function (event) {
   const file = document.getElementById('post-file-input').files[0];
   const errorText = document.getElementById('post-error');
   let fileUrl = null;
+  let fileType = 'none';
   if (file) {
-    const uuid = uuidv4();
-    const { data, error } = await supabase.storage.from('posts').upload(`${uuid}`, file);
-    console.log("Full path", data.fullPath);
-    console.log("File name", data.name);
-    console.log("File type", data.type);
-    if (data) {
-      console.log('File uploaded successfully:', data);
-      console.log('Post created successfully');
-      postCreateForm.reset();
-      fileUrl = `https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/posts//${data.path}`;
+    fileUrl = await uploadPostFile(file);
+    if (fileUrl) {
+      fileType = file.type.includes('image') ? 'image' : file.type.includes('video') ? 'video' : 'none';
     } else {
       errorText.textContent = 'Error al subir el archivo';
-      console.error('Error uploading file:', error);
+      return;
     }
   }
-  const fileType = file?.type.includes('image') ? 'image' : file?.type.includes('video') ? 'video' : 'none';
   console.log('User:', user);
   console.log('User id:', user.id);
+  if (!fileType) {
+    console.log("File type is false")
+  }
+  if (fileType === "none") {
+    console.log("BIEN")
+  }
   createPost({
     "user": user.id,
     "text": text,
@@ -213,33 +208,31 @@ postCreateForm.addEventListener('submit', async function (event) {
 function updateUIForLoggedInUser() {
   const loginButton = document.getElementById('login-button');
   const profilePictureDiv = document.getElementById('profile-picture-div');
+  const description = document.getElementById('profile-description');
   const profileTitle = document.getElementById('profile-title');
   const profilePicture = document.querySelectorAll('.profile-picture');
 
   loginButton.style.display = 'none';
   profilePictureDiv.style.display = 'block';
   profileTitle.textContent = `${user.nickname}`;
+  description.value = user.description ? user.description : '';
   profilePicture.forEach(picture => {
     if (user.profile_picture)
-      picture.src = user.profile_picture;
+      picture.src = `${user.profile_picture}?t=${Date.now()}`; // Force reload using datetime
     else
       picture.src = defaultUserPicture;
   });
 }
 
-function handleScroll() {
+async function handleScroll() {
   if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
     if (loading) return;
     loading = true;
+    loader.style.display = 'block';
     const postContainer = document.getElementById('posts');
     try {
-      /*       const posts = loadPosts('posts/latest', page); */
-      const posts = []
-      loader.style.display = 'block';
-      if (posts.length === 0) {
-        return;
-      }
-
+      const posts = await loadPosts('posts/latest', dateLastPostRetrieved);
+      dateLastPostRetrieved = posts[posts.length - 1]
       posts.forEach(post => {
         postContainer.innerHTML += `
         <div class="card mx-auto mb-3 text-bg-dark border-subtle">
@@ -258,7 +251,7 @@ function handleScroll() {
                         alt="Post image" />`
 
           : post.file_type === 'video' ?
-            `video class="card-img-top"
+            `video controls class="card-img-top"
                         src="${post.file}" />`
             : ''
             +
@@ -267,7 +260,10 @@ function handleScroll() {
             </div>
       `
       });
+      loading = false;
+      loader.style.display = 'none';
     } catch (error) {
+      console.error('Error loading posts:', error);
       postContainer.innerHTML = `
         <div class="alert alert-danger" role="alert">
             Error loading posts

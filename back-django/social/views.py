@@ -1,8 +1,6 @@
-from re import U
-from django.http import HttpRequest, JsonResponse
+from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
-from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework.decorators import api_view
 
@@ -13,6 +11,8 @@ from social.serializers import PostSerializer, UserSerializer, CommentSerializer
 from social.models import Post, User, Comment
 
 import os
+
+from datetime import datetime
 
 
 SECRET_KEY = os.getenv('SECRET_KEY_SUPABASE')
@@ -67,10 +67,13 @@ def create_user(request):
 
 @api_view(["GET"])
 def get_latest_posts(request):
-    print("kk")
-    paginator = Paginator(Post.objects.filter(deleted=False).order_by('-date_uploaded').values(), 20)
-    page = request.GET.get('page')
-    posts = paginator.get_page(page).object_list
+    milliseconds = int(request.GET.get('date'))
+    print("Milliseconds", milliseconds)
+    date = datetime.fromtimestamp(milliseconds / 1000)
+    queryset = Post.objects.filter(deleted=False)
+    if date:
+        queryset = queryset.filter(date_uploaded__lt=date)
+    posts = queryset.order_by('-date_uploaded')[:20]
     serializer = PostSerializer(posts, many=True)
     return JsonResponse(serializer.data, safe=False)
 
@@ -80,9 +83,12 @@ def get_latest_posts_following(request):
     user = get_user_from_token(request)
     if user is None:
         return JsonResponse({"error": "Unauthorized"}, status=401)
-    paginator = Paginator(Post.objects.filter(deleted=False, user__in=user.following).order_by('-date_uploaded').values(), 20)
-    page = request.GET.get('page')
-    posts = paginator.get_page(page).object_list
+    milliseconds = request.GET.get('date')
+    date = datetime.fromtimestamp(milliseconds / 1000)
+    queryset = Post.objects.filter(user__in=user.following, deleted=False)
+    if date:
+        queryset = queryset.filter(date_uploaded__lt=date)
+    posts = queryset.order_by('-date_uploaded')[:20]
     serializer = PostSerializer(posts, many=True)
     return JsonResponse(serializer.data, safe=False)
 
