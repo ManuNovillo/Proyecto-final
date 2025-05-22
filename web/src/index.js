@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
 import { getUser, createUser, updateUser, createPost, getUserByName } from './services.js'
+import { uploadProfilePicture } from './supabase_files.js'
 
 const supabaseUrl = 'https://mwxwlheqcworkzgnkgwj.supabase.co'
 const supabaseToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13eHdsaGVxY3dvcmt6Z25rZ3dqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDY2MjAsImV4cCI6MjA2MjAyMjYyMH0.jyWmJI1qxa4MAl5JSh_Bb7fNjEAHwrwdjSC_8hRkoyo'
@@ -154,15 +155,7 @@ profileForm.addEventListener('submit', async function (event) {
   if (file) {
     console.log('File selected:', file);
     const user_id = user.supabase_id;
-    supabase.storage.from('profilepictures').remove([`${user_id}`]);
-    const { data, error } = supabase.storage.from('profilepictures').upload(`${user_id}`, file, { upsert: true });
-    if (data) {
-      console.log('File uploaded successfully:', data);
-      fileUrl = `https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/profilepictures//${data.path}`;
-    }
-    else if (error) {
-      console.error('Error uploading file:', error);
-    }
+    fileUrl = await uploadProfilePicture(file, user_id);
   }
   const description = document.getElementById('profile-description').value;
   try {
@@ -177,7 +170,6 @@ profileForm.addEventListener('submit', async function (event) {
     console.error('Error updating user:', exception);
   }
 });
-
 
 const postCreateForm = document.getElementById('post-create-form');
 postCreateForm.addEventListener('submit', async function (event) {
