@@ -25,7 +25,7 @@
                     <form id="form-search-user">
                         <input id="search-user-input" type="text"
                             class="w-75 bg-dark text-white rounded-3 border-subtle border-2" placeholder="Buscar">
-                        <button type="submit" class="btn btn-success">Buscar</button>
+                        <button type="submit" class="btn btn-success mt-3 mt-xl-0">Buscar</button>
                     </form>
                     <p id="search-user-error" class="text-danger mt-1"></p>
                 </div>
@@ -33,7 +33,7 @@
                     <button class="btn btn-success text-white" data-bs-toggle="modal"
                         data-bs-target="#modal-login">Login</button>
                 </div>
-                <div class="col-4 text-end" id="profile-picture-div" style="display: none;">
+                <div class="col-4 text-end" id="profile-picture-div">
                     <a href="" data-bs-target="#modal-perfil" data-bs-toggle="modal">
                         <img class="profile-picture rounded-circle" src="" alt="Profile picture" width="75" height="75">
                     </a>
@@ -42,81 +42,70 @@
         </div>
     </header>
     <main class="text-white mt-5">
-        <div class="col-lg-4 mx-auto">
-            <div id="user-data" style="display: none;">
-                <div class="row align-items-center mb-3">
-                    <div class="col-6 text-center">
-                        <img id="user-found-profile-picture" src="https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/posts//28ee8f9e-0aa0-4a8f-8ff4-21fc68a82a96"
-                            width="200" height="200" class="rounded-circle border border-2 border-dark" alt="Logo">
-                    </div>
-                    <div class="col-6">
-                        <h3>Nombre de usuario</h3>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam
-                            voluptatibus
-                            voluptatum, quia voluptas sit aspernatur aut odit aut fugit, sed est laborum.</p>
-                        <button id="follow-button" style="display:none;" class="btn btn-success">Seguir</button>
-                        <button id="unfollow-button" style="display:none;" class="btn btn-danger">Dejar de seguir</button>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-4" >
+                    <div id="posts-selector" class="text-center sticky-lg-top">
+                        <ul class="list-unstyled">
+                            <li class="mb-5">
+                                <button id="show-latest-posts" class="btn btn-link">Discover</button>
+                            </li>
+                            <li class="mt-5">
+                                <button id="show-user-posts" class="btn btn-link">Feed</button>
+                            </li>
+                        </ul>
                     </div>
                 </div>
-            </div>
-            <form id="post-create-form" novalidate>
-                <textarea class="bg-dark border-subtle w-100 text-white" name="post-text" id="post-text"
-                    placeholder="Di lo que estás pensando" maxlength="450"></textarea>
-                <div class="row justify-content-between align-items-center">
-                    <div class="col-6">
-                        <div class="position-relative d-inline-block mx-auto">
-                            <label for="post-file-input" class="position-absolute bottom-0 start-0 me-2 mb-1">
-                                <i class="fa fa-image text-white rounded-circle bg-black p-2 image-upload"
-                                    aria-hidden="true"></i>
-                            </label>
-                            <input class="file-input" id="post-file-input" type="file" />
+                <div class="col-lg-4">
+                    <div id="user-data">
+                        <div class="row align-items-center mb-3">
+                            <div class="col-6 text-center">
+                                <img id="user-found-profile-picture"
+                                    src="https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/posts//28ee8f9e-0aa0-4a8f-8ff4-21fc68a82a96"
+                                    width="200" height="200" class="rounded-circle border border-2 border-dark"
+                                    alt="Logo">
+                            </div>
+                            <div class="col-6">
+                                <h3>Nombre de usuario</h3>
+                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam
+                                    voluptatibus
+                                    voluptatum, quia voluptas sit aspernatur aut odit aut fugit, sed est laborum.</p>
+                                <button id="follow-button" style="display:none;" class="btn btn-success">Seguir</button>
+                                <button id="unfollow-button" style="display:none;" class="btn btn-danger">Dejar de
+                                    seguir</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-6 text-end">
-                        <button type="submit" class="btn btn-success mt-1 mb-3">Publicar</button>
-                    </div>
-                </div>
-            </form>
-            <div id="posts">
-                <div class="card mx-auto mb-3 text-bg-dark border-subtle">
-                    <div class="card-body">
-                        <div class="row">
+
+                    <form id="post-create-form" novalidate>
+                        <textarea class="bg-dark border-subtle w-100 text-white" name="post-text" id="post-text"
+                            placeholder="Di lo que estás pensando" maxlength="450"></textarea>
+                        <div class="row justify-content-between align-items-center">
                             <div class="col-6">
-                                Holaaaa
+                                <div class="position-relative d-inline-block mx-auto">
+                                    <label for="post-file-input" class="position-absolute bottom-0 start-0 me-2 mb-1">
+                                        <i class="fa fa-image text-white rounded-circle bg-black p-2 image-upload"
+                                            aria-hidden="true"></i>
+                                    </label>
+                                    <input class="file-input" id="post-file-input" type="file" />
+                                </div>
                             </div>
                             <div class="col-6 text-end">
-                                <p>23 marzo</p>
+                                <button type="submit" class="btn btn-success mt-1 mb-3">Publicar</button>
                             </div>
                         </div>
-                        <img class="card-img-top"
-                            src="https://www.cats.org.uk/media/13136/220325case013.jpg?width=500&height=333.49609375"
-                            alt="Title" />
-                        <p class="card-text">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Doloribus
-                            asperiores,
-                            veritatis laudantium, officiis saepe facilis mollitia labore velit porro reiciendis
-                            voluptatibus
-                            eos et natus. Impedit iste deleniti harum quidem sit!Lorem ipsum dolor sit amet consectetur adipisicing elit. Odio, dolores. Vero, vel alias. Natus consectetur corrupti, excepturi commodi quo quam unde voluptate illum inventore amet reiciendis ipsam placeat cum vel?
-                        </p>
+                    </form>
+                    <div id="posts">
                     </div>
                 </div>
-                <div class="card mx-auto text-bg-dark border-subtle">
-                    <div class="card-body">
-                        <h4 class="card-title">Title</h4>
-                        <img class="card-img-top"
-                            src="https://www.wnct.com/wp-content/uploads/sites/99/2022/07/Cat.jpg?w=2560&h=1440&crop=1"
-                            alt="Title" />
-                        <p class="card-text">Lorem ipsum dolor sit amet consectetur adipisicing elit. Ducimus a
-                            voluptates nisi consectetur beatae pariatur incidunt delectus natus, dignissimos, doloremque
-                            exercitationem saepe voluptatem quisquam nesciunt nemo et sint odio libero. Lorem ipsum
-                            dolor sit amet consectetur adipisicing elit. Quibusdam dolorem autem ipsam cumque vel,
-                            tempore dolores earum ducimus placeat non impedit quidem optio fugiat repellat ullam esse
-                            doloribus rerum maxime! Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolores et
-                            minus inventore architecto. Ullam delectus ipsum blanditiis explicabo odit accusamus
-                            laudantium incidunt, amet deserunt labore nam expedita! Accusamus, repellat tempora.</p>
-                    </div>
+                
+                <div class="col-lg-4">
+                    
                 </div>
             </div>
         </div>
+
+
     </main>
     <footer>
         <div id="loader"></div>
@@ -223,7 +212,8 @@
                     <div class="modal-body">
                         <div class="text-center">
                             <div class="position-relative d-inline-block mx-auto">
-                                <img class="profile-picture rounded-circle border border-2 border-dark" src="" width="300" height="300" alt="Logo" />
+                                <img class="profile-picture rounded-circle border border-2 border-dark" src=""
+                                    width="300" height="300" alt="Logo" />
                                 <label for="profile-picture-input" class="position-absolute bottom-0 end-0 me-2 mb-1">
                                     <i class="fa fa-pencil text-white rounded-circle bg-black p-2 image-upload"
                                         aria-hidden="true"></i>
@@ -251,18 +241,3 @@
 </body>
 
 </html>
-
-
-
-
-<!-- <div class="row align-items-center mb-3">
-                <div class="col-6 text-center">
-                    <img src="https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/posts//28ee8f9e-0aa0-4a8f-8ff4-21fc68a82a96" width="200" height="200" class="rounded-circle border border-2 border-dark" alt="Logo">
-                </div>
-                <div class="col-6">
-                    <h3>Nombre de usuario</h3>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam
-                        voluptatibus
-                        voluptatum, quia voluptas sit aspernatur aut odit aut fugit, sed est laborum.</p>
-                </div>
-            </div> -->

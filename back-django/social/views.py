@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
-
+from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
 import jwt
@@ -31,6 +31,7 @@ def get_token_data(token):
         )
         return decoded
     except InvalidTokenError as e:
+        print("Invalid token")
         return None
 
 
@@ -73,19 +74,21 @@ def get_latest_posts(request):
     queryset = Post.objects.filter(deleted=False)
     if date:
         queryset = queryset.filter(date_uploaded__lt=date)
-    posts = queryset.order_by('-date_uploaded')[:20]
+    posts = queryset.order_by('-date_uploaded')[:2]
     serializer = PostSerializer(posts, many=True)
     return JsonResponse(serializer.data, safe=False)
 
 
 @api_view(["GET"])
 def get_latest_posts_following(request):
+    print("following")
     user = get_user_from_token(request)
+    print(user)
     if user is None:
         return JsonResponse({"error": "Unauthorized"}, status=401)
-    milliseconds = request.GET.get('date')
+    milliseconds = int(request.GET.get('date'))
     date = datetime.fromtimestamp(milliseconds / 1000)
-    queryset = Post.objects.filter(user__in=user.following, deleted=False)
+    queryset = Post.objects.filter(user__in=user.following.all(), deleted=False)
     if date:
         queryset = queryset.filter(date_uploaded__lt=date)
     posts = queryset.order_by('-date_uploaded')[:20]
@@ -165,3 +168,13 @@ def get_user_by_nickname(request, nickname):
     user = get_object_or_404(User, nickname=nickname, deleted=False)
     serializer = UserSerializer(user)
     return JsonResponse(serializer.data, safe=False)
+
+@api_view(["PUT"])
+def like_post(request, id):
+    user = get_user_from_token(request)
+    if (user is None):
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+    post = get_object_or_404(Post, id=id, deleted=False)
+    post.likes += 1
+    post.save()
+    return Response({"likes": post.likes}, status=status.HTTP_200_OK)

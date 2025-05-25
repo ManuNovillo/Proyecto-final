@@ -12,4 +12,5 @@ urlpatterns = [
     path('users/update/<int:id>/', views.update_user_profile),
     path('users/nickname/<str:nickname>/', views.get_user_by_nickname),
     path('posts/following', views.get_latest_posts_following)
+    
 ]

@@ -12,6 +12,7 @@ class Post(models.Model):
     deleted = models.BooleanField(default=False)
     date_uploaded = models.DateTimeField(auto_now_add=True)
     file_type = models.CharField(max_length=50, choices=FILE_TYPE_CHOICES)
+    likes = models.IntegerField(default=0)
     user = models.ForeignKey(
         'User',
         on_delete=models.PROTECT,

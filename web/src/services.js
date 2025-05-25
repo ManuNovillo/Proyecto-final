@@ -53,8 +53,21 @@ export async function createPost(post) {
     }
 }
 
-export async function loadPosts(url, date) {
-    const response = await fetch(`${host}${url}?date=${date}`);
+export async function loadPosts(url, date, requiresToken) {
+    console.log("URL ES", url);
+    let response;
+    if (requiresToken) {
+    const token = await getSessionToken();
+    response = await fetch(`${host}${url}?date=${date}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        }
+    });
+    } else {
+        response = await fetch(`${host}${url}?date=${date}`);
+    }
     const posts = await response.json();
     return posts;
 }

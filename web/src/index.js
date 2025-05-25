@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { getUser, createUser, updateUser, createPost, getUserByName, loadPosts } from './services.js'
-import { uploadProfilePicture } from './supabase_files.js'
+import { uploadProfilePicture, uploadPostFile } from './supabase_files.js'
 
 const supabaseUrl = 'https://mwxwlheqcworkzgnkgwj.supabase.co'
 const supabaseToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13eHdsaGVxY3dvcmt6Z25rZ3dqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDY2MjAsImV4cCI6MjA2MjAyMjYyMH0.jyWmJI1qxa4MAl5JSh_Bb7fNjEAHwrwdjSC_8hRkoyo'
@@ -12,32 +12,60 @@ const defaultUserPicture = 'https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/
 let user = null;
 let isCreatingAccount = false;
 let dateLastPostRetrieved = Date.now();
+let lastPostId = null
 let loading = false;
-const loader = document.getElementById('loader');
+let showingUserPosts = false;
+
+const postContainer = document.getElementById('posts');
 
 supabase.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && !isCreatingAccount) {
     console.log('User signed in auth state:', session);
     user = await getUser(session.user.id);
+    updateUIForLoggedInUser()
     console.log('User:', user);
   } else if (event === 'SIGNED_OUT') {
     user = null;
   }
 });
 
-if (localStorage.getItem('sb-mwxwlheqcworkzgnkgwj-auth-token') !== null) {
-  const token = JSON.parse(localStorage.getItem('sb-mwxwlheqcworkzgnkgwj-auth-token'));
-  console.log('Token:', token.user);
-  user = await getUser(token.user.id);
-  updateUIForLoggedInUser();
-  console.log('User:', user);
-} else {
-  console.log('No session found in local storage');
-}
 
+document.addEventListener('DOMContentLoaded', function () {
+  const searchUserForm = document.getElementById('form-search-user');
+  searchUserForm.addEventListener('submit', searchUser)
 
-const searchUserForm = document.getElementById('form-search-user');
-searchUserForm.addEventListener('submit', async function (event) {
+  const signUpForm = document.getElementById('form-signup');
+  signUpForm.addEventListener('submit', signup)
+
+  const loginForm = document.getElementById('form-login');
+  loginForm.addEventListener('submit', login);
+
+  const showLatestPostsButton = document.getElementById('show-latest-posts');
+  showLatestPostsButton.addEventListener('click', function() {
+    dateLastPostRetrieved = Date.now()
+    postContainer.innerHTML = ''
+    showLatestPosts()
+  })
+
+  const showUserPostsButton = document.getElementById('show-user-posts');
+  showUserPostsButton.addEventListener('click', function() {
+    dateLastPostRetrieved = Date.now()
+    postContainer.innerHTML = ''
+    showUserPosts()
+  })
+
+  showLatestPosts()
+})
+
+supabase.auth.getSession().then(async ({ data: { session } }) => {
+  if (session) {
+    console.log("Sesión activa", session);
+  } else {
+    user = null
+  }
+});
+
+async function searchUser(event) {
   event.preventDefault();
   const searchInput = document.getElementById('search-user-input').value;
   const errorText = document.getElementById('search-user-error');
@@ -53,7 +81,7 @@ searchUserForm.addEventListener('submit', async function (event) {
     userContainer.style.display = 'block';
     postCreateForm.style.display = 'none';
     const img = userContainer.querySelector("img")
-    img.src = userFound.profile_picture ? `${userFound.profile_picture}?t=${Date.now()}`: defaultUserPicture;
+    img.src = userFound.profile_picture ? `${userFound.profile_picture}?t=${Date.now()}` : defaultUserPicture;
     const userFoundName = userContainer.querySelector('h3');
     userFoundName.textContent = userFound.nickname;
     const userFoundDescription = userContainer.querySelector('p');
@@ -62,11 +90,11 @@ searchUserForm.addEventListener('submit', async function (event) {
     errorText.textContent = 'Uusuario no encontrado';
     console.error('Error searching user:', exception);
   }
-});
+}
 
-const signUpForm = document.getElementById('form-signup');
-signUpForm.addEventListener('submit', async function (event) {
-  event.preventDefault();
+
+async function signup(event) {
+   event.preventDefault();
   const email = document.getElementById('email-signup').value;
   const password = document.getElementById('password-signup').value;
   const nickname = document.getElementById('nickname').value;
@@ -110,10 +138,10 @@ signUpForm.addEventListener('submit', async function (event) {
     console.error('Error creating user:', error);
     errorText.textContent = 'Error al crear el usuario';
   }
-});
+ 
+}
 
-const loginForm = document.getElementById('form-login');
-loginForm.addEventListener('submit', async function (event) {
+async function login() {
   event.preventDefault();
   const email = document.getElementById('email-login').value;
   const password = document.getElementById('password-login').value;
@@ -127,9 +155,7 @@ loginForm.addEventListener('submit', async function (event) {
     console.log('User logged in:', data);
     let modalLogin = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-login'))
     try {
-      user = await getUser(data.user.id);
       modalLogin.hide()
-      updateUIForLoggedInUser();
       console.log('User data:', user);
     } catch (exception) {
       errorText.textContent = 'Error al iniciar sesión';
@@ -139,9 +165,10 @@ loginForm.addEventListener('submit', async function (event) {
     errorText.textContent = 'Error al iniciar sesión';
     console.error('Error logging in:', error);
   }
-});
 
-window.addEventListener('scroll', handleScroll);
+}
+
+window.addEventListener('scroll', debounce(handleScroll, 1000));
 
 const profileForm = document.getElementById('form-profile');
 profileForm.addEventListener('submit', async function (event) {
@@ -186,12 +213,6 @@ postCreateForm.addEventListener('submit', async function (event) {
   }
   console.log('User:', user);
   console.log('User id:', user.id);
-  if (!fileType) {
-    console.log("File type is false")
-  }
-  if (fileType === "none") {
-    console.log("BIEN")
-  }
   createPost({
     "user": user.id,
     "text": text,
@@ -206,14 +227,17 @@ postCreateForm.addEventListener('submit', async function (event) {
 });
 
 function updateUIForLoggedInUser() {
+  console.log("Updating UI log in")
   const loginButton = document.getElementById('login-button');
   const profilePictureDiv = document.getElementById('profile-picture-div');
   const description = document.getElementById('profile-description');
   const profileTitle = document.getElementById('profile-title');
   const profilePicture = document.querySelectorAll('.profile-picture');
+  const postCreateForm = document.getElementById('post-create-form');
 
   loginButton.style.display = 'none';
   profilePictureDiv.style.display = 'block';
+  postCreateForm.style.display = 'block'
   profileTitle.textContent = `${user.nickname}`;
   description.value = user.description ? user.description : '';
   profilePicture.forEach(picture => {
@@ -224,51 +248,100 @@ function updateUIForLoggedInUser() {
   });
 }
 
+
 async function handleScroll() {
-  if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
-    if (loading) return;
+  if (loading === true) return;
+  if ((window.innerHeight + window.scrollY) >= document.body.scrollHeight) {
     loading = true;
-    loader.style.display = 'block';
-    const postContainer = document.getElementById('posts');
-    try {
-      const posts = await loadPosts('posts/latest', dateLastPostRetrieved);
-      dateLastPostRetrieved = posts[posts.length - 1]
-      posts.forEach(post => {
-        postContainer.innerHTML += `
-        <div class="card mx-auto mb-3 text-bg-dark border-subtle">
+    if (showingUserPosts) {
+      showUserPosts()
+    } else {
+      showLatestPosts()
+    }
+  }
+}
+
+function debounce(func, delay) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => {
+      func(...args)
+    }, delay);
+  };
+}
+
+async function showPosts(url, requiresToken) {
+  const loader = document.getElementById('loader');
+  loader.style.display = 'block';
+  try {
+    const posts = await loadPosts(url, dateLastPostRetrieved, requiresToken);
+    if (posts.length > 0) {
+      console.log("ES 0");
+      dateLastPostRetrieved = new Date(posts[posts.length - 1].date_uploaded).getTime()
+    }
+    posts.forEach(post => {
+      if (post.id === lastPostId) return;
+      lastPostId = post.id;
+      console.log("OAHDJLKAHDLJADHAOL");
+      
+      console.log(post);
+      const date = new Date(post.date_uploaded)
+      const day = date.getDate()
+      const monthAbbreviation = date.toLocaleString('es-ES', { month: 'short' })
+      const year = date.getFullYear()
+      let userProfilePicture = post.user.profile_picture ? `${post.user.profile_picture}?t=${Date.now()}`: defaultUserPicture
+      let content = `
+        <div class="card mx-auto mb-3 bg-dark-blue border-subtle">
                 <div class="card-body">
-                    <div class="row">
+                    <div class="row mb-3">
                         <div class="col-6">
-                            <a href=''>${post.user.nickname}</a>
+                            <h2>
+                              <img src="${userProfilePicture}?t=${Date.now}" width="100" height="100" class="rounded-circle">
+                              <a href='' class="text-decoration-none text-white" >${post.user.nickname}</a>
+                            </h2>
                         </div>
                         <div class="col-6 text-end">
-                            <p>${post.date_uploaded}</p>
+                            <p>${day} ${monthAbbreviation} ${year}</p>
                         </div>
-                    </div> ` +
-          post.file_type === 'image' ?
-          `<img class="card-img-top"
+                    </div> `
+      content += post.file_type === 'image' ?
+        `<img class="card-img-top"
                         src="${post.file}"
                         alt="Post image" />`
 
-          : post.file_type === 'video' ?
-            `video controls class="card-img-top"
-                        src="${post.file}" />`
-            : ''
-            +
-            `<p class="card-text">${post.text}</p>
+        : post.file_type === 'video' ?
+          `<video controls class="card-img-top"
+                       src="${post.file}"></video>`
+          : ''
+      content +=
+        `<p class="card-text text-white">${post.text}</p>
                 </div>
             </div>
-      `
-      });
-      loading = false;
-      loader.style.display = 'none';
-    } catch (error) {
-      console.error('Error loading posts:', error);
-      postContainer.innerHTML = `
+       `
+      postContainer.innerHTML += content
+      console.log(content);
+      
+    });
+    loading = false;
+    loader.style.display = 'none';
+  } catch (error) {
+    console.error('Error loading posts:', error);
+    postContainer.innerHTML = `
         <div class="alert alert-danger" role="alert">
             Error loading posts
         </div>
       `;
-    }
   }
+}
+
+function showLatestPosts() {
+  showingUserPosts = false;
+  showPosts('posts/latest', false);
+}
+
+function showUserPosts() {
+  showingUserPosts = true;
+  console.log("showuserposts");
+  showPosts('posts/following', true);
 }

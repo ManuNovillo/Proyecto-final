@@ -1,7 +1,7 @@
 .file-input {
-  visibility:hidden;
-  width:0;
-  height:0;
+  visibility: hidden;
+  width: 0;
+  height: 0;
   background-color: red;
 }
 
@@ -35,10 +35,45 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 img {
   object-fit: cover;
+}
+
+#post-create-form {
+  display: none;
+}
+
+#user-data {
+  display: none;
+}
+
+#profile-picture-div {
+  display: none;
+}
+
+li a {
+  text-decoration: none;
+  color: white;
+}
+
+#posts-selector {
+  top: 200px;
+}
+
+.bg-dark-blue {
+  background-color: rgb(95, 82, 214);
+}
+
+.hover-grow:hover {
+  transition: all 0.2s;
+  transform: scale(1.3, 1.3);
 }
