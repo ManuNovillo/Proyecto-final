@@ -71,6 +71,7 @@ li a {
 
 .bg-dark-blue {
   background-color: rgb(95, 82, 214);
+  background:  linear-gradient(-45deg, rgba(102, 100, 100, 1) 0%, rgba(24, 24, 26, 1) 59%, rgba(15, 15, 38, 1) 100%);
 }
 
 .hover-grow:hover {

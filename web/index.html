@@ -17,8 +17,8 @@
             <div class="row justify-content-between align-items-center">
                 <div class="col-4">
                     <a href="" onclick="location.reload()">
-                        <img src="https://i.pinimg.com/originals/c6/df/a2/c6dfa22150790c670c988c5196f6ba0e.gif" alt=""
-                            width="100" height="100" class="rounded-circle"> <!-- Poner "Logo nombre_app" -->
+                        <img src="/img/logo.png" alt="DragonFly logo"
+                            width="100" height="100" class="rounded-circle">
                     </a>
                 </div>
                 <div class="col-4 text-center">
@@ -44,14 +44,14 @@
     <main class="text-white mt-5">
         <div class="container-fluid">
             <div class="row">
-                <div class="col-lg-4" >
+                <div class="col-lg-4">
                     <div id="posts-selector" class="text-center sticky-lg-top">
                         <ul class="list-unstyled">
                             <li class="mb-5">
-                                <button id="show-latest-posts" class="btn btn-link">Discover</button>
+                                <button id="show-latest-posts" class="btn btn-link text-decoration-none text-white border-bottom-subtle"><h1>Discover</h1></button>
                             </li>
                             <li class="mt-5">
-                                <button id="show-user-posts" class="btn btn-link">Feed</button>
+                                <button id="show-user-posts" class="btn btn-link text-decoration-none text-white border-bottom-subtle"><h1>Feed</h1></button>
                             </li>
                         </ul>
                     </div>
@@ -61,17 +61,15 @@
                         <div class="row align-items-center mb-3">
                             <div class="col-6 text-center">
                                 <img id="user-found-profile-picture"
-                                    src="https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/posts//28ee8f9e-0aa0-4a8f-8ff4-21fc68a82a96"
+                                    src=""
                                     width="200" height="200" class="rounded-circle border border-2 border-dark"
                                     alt="Logo">
                             </div>
                             <div class="col-6">
-                                <h3>Nombre de usuario</h3>
-                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam
-                                    voluptatibus
-                                    voluptatum, quia voluptas sit aspernatur aut odit aut fugit, sed est laborum.</p>
-                                <button id="follow-button" style="display:none;" class="btn btn-success">Seguir</button>
-                                <button id="unfollow-button" style="display:none;" class="btn btn-danger">Dejar de
+                                <h3></h3>
+                                <p></p>
+                                <button id="follow-button" style="display:none;" class="btn btn-success mb-2">Seguir</button>
+                                <button id="unfollow-button" style="display:none;" class="btn btn-danger mt-2">Dejar de
                                     seguir</button>
                             </div>
                         </div>
@@ -96,6 +94,7 @@
                         </div>
                     </form>
                     <div id="posts">
+                        
                     </div>
                 </div>
                 

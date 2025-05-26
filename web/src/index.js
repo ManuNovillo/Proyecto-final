@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { getUser, createUser, updateUser, createPost, getUserByName, loadPosts } from './services.js'
+import { getUser, createUser, updateUser, createPost, getUserByName, loadPosts, followUser, unfollowUser, likePost } from './services.js'
 import { uploadProfilePicture, uploadPostFile } from './supabase_files.js'
 
 const supabaseUrl = 'https://mwxwlheqcworkzgnkgwj.supabase.co'
@@ -9,49 +9,91 @@ export const supabase = createClient(supabaseUrl, supabaseToken)
 
 const defaultUserPicture = 'https://mwxwlheqcworkzgnkgwj.supabase.co/storage/v1/object/public/profilepictures//default-profile-picture.png'
 
-let user = null;
-let isCreatingAccount = false;
-let dateLastPostRetrieved = Date.now();
+let user = null
+let isCreatingAccount = false
+let dateLastPostRetrieved = Date.now()
 let lastPostId = null
-let loading = false;
-let showingUserPosts = false;
+let loading = false
+let showingUserPosts = false
+let showingLatestPosts = true
+let showingFollowingPosts = false
+let userFoundId = null
 
-const postContainer = document.getElementById('posts');
+const postContainer = document.getElementById('posts')
+
+const signUpForm = document.getElementById('form-signup')
+
+const loginForm = document.getElementById('form-login')
+
+const profileForm = document.getElementById('form-profile')
+
+const postCreateForm = document.getElementById('post-create-form')
+
+const showLatestPostsButton = document.getElementById('show-latest-posts')
 
 supabase.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && !isCreatingAccount) {
-    console.log('User signed in auth state:', session);
-    user = await getUser(session.user.id);
+    console.log('User signed in auth state:', session)
+    user = await getUser(session.user.id)
     updateUIForLoggedInUser()
-    console.log('User:', user);
+    console.log('User:', user)
   } else if (event === 'SIGNED_OUT') {
-    user = null;
+    user = null
   }
-});
+})
 
 
 document.addEventListener('DOMContentLoaded', function () {
-  const searchUserForm = document.getElementById('form-search-user');
+  const searchUserForm = document.getElementById('form-search-user')
   searchUserForm.addEventListener('submit', searchUser)
 
-  const signUpForm = document.getElementById('form-signup');
   signUpForm.addEventListener('submit', signup)
 
-  const loginForm = document.getElementById('form-login');
-  loginForm.addEventListener('submit', login);
+  loginForm.addEventListener('submit', login)
 
-  const showLatestPostsButton = document.getElementById('show-latest-posts');
+  profileForm.addEventListener('submit', updateProfile)
+
+  postCreateForm.addEventListener('submit', uploadPost)
+
   showLatestPostsButton.addEventListener('click', function() {
     dateLastPostRetrieved = Date.now()
     postContainer.innerHTML = ''
+    const userContainer = document.getElementById('user-data')
+    userContainer.style.display = 'none'
     showLatestPosts()
   })
 
-  const showUserPostsButton = document.getElementById('show-user-posts');
+  const showUserPostsButton = document.getElementById('show-user-posts')
   showUserPostsButton.addEventListener('click', function() {
     dateLastPostRetrieved = Date.now()
     postContainer.innerHTML = ''
-    showUserPosts()
+    const userContainer = document.getElementById('user-data')
+    userContainer.style.display = 'none'
+    showFollowingPosts()
+  })
+
+  const followButton = document.getElementById('follow-button')
+  followButton.addEventListener('click', () => {
+    try {
+      followUser(userFoundId)
+      user.following.push(userFoundId)
+      followButton.style.display = 'none'
+      unfollowButton.style.display = 'block'
+    } catch (exception) {
+      console.error('Error following user:', exception)
+    }
+  })
+
+  const unfollowButton = document.getElementById('unfollow-button')
+  unfollowButton.addEventListener('click', () => {
+    try {
+      unfollowUser(userFoundId)
+      user.following = user.following.filter(id => id !== userFoundId)
+      unfollowButton.style.display = 'none'
+      followButton.style.display = 'block'
+    } catch (exception) {
+      console.error('Error unfollowing user:', exception)
+    }
   })
 
   showLatestPosts()
@@ -59,65 +101,84 @@ document.addEventListener('DOMContentLoaded', function () {
 
 supabase.auth.getSession().then(async ({ data: { session } }) => {
   if (session) {
-    console.log("Sesión activa", session);
+    console.log("Sesión activa", session)
   } else {
     user = null
   }
-});
+})
 
 async function searchUser(event) {
-  event.preventDefault();
-  const searchInput = document.getElementById('search-user-input').value;
-  const errorText = document.getElementById('search-user-error');
+  event.preventDefault()
+  const searchInput = document.getElementById('search-user-input').value
+  const errorText = document.getElementById('search-user-error')
   if (searchInput.length == 0) {
-    errorText.textContent = 'Introduce un nombre de usuario';
-    return;
+    errorText.textContent = 'Introduce un nombre de usuario'
+    return
   }
   try {
-    const userFound = await getUserByName(searchInput);
-    errorText.textContent = '';
-    console.log('User found:', userFound);
-    const userContainer = document.getElementById('user-data');
-    userContainer.style.display = 'block';
-    postCreateForm.style.display = 'none';
+    const userFound = await getUserByName(searchInput)
+    errorText.textContent = ''
+    console.log('User found:', userFound)
+    userFoundId = userFound.id
+    const userContainer = document.getElementById('user-data')
+    const followButton = document.getElementById('follow-button')
+    const unfollowButton = document.getElementById('unfollow-button')
+    followButton.style.display = 'block'
+    unfollowButton.style.display = 'block'
+    userContainer.style.display = 'block'
+    postCreateForm.style.display = 'none'
+    if (userFound.id === user?.id) {
+      console.log('User found is the same as logged in user');
+      followButton.style.display = 'none'
+      unfollowButton.style.display = 'none'
+    } else if (user?.following?.includes(userFound.id)) {
+      followButton.style.display = 'none'
+      unfollowButton.style.display = 'block'
+    } else {
+      followButton.style.display = 'block'
+      unfollowButton.style.display = 'none'
+    }
     const img = userContainer.querySelector("img")
-    img.src = userFound.profile_picture ? `${userFound.profile_picture}?t=${Date.now()}` : defaultUserPicture;
-    const userFoundName = userContainer.querySelector('h3');
-    userFoundName.textContent = userFound.nickname;
-    const userFoundDescription = userContainer.querySelector('p');
-    userFoundDescription.textContent = userFound.description ? userFound.description : '';
+    img.src = userFound.profile_picture ? `${userFound.profile_picture}?t=${Date.now()}` : defaultUserPicture
+    const userFoundName = userContainer.querySelector('h3')
+    userFoundName.textContent = userFound.nickname
+    const userFoundDescription = userContainer.querySelector('p')
+    userFoundDescription.textContent = userFound.description ? userFound.description : ''
+    dateLastPostRetrieved = Date.now()
+    postContainer.innerHTML = ''
+    showUserPosts()
   } catch (exception) {
-    errorText.textContent = 'Uusuario no encontrado';
-    console.error('Error searching user:', exception);
+    errorText.textContent = 'Uusuario no encontrado'
+    console.error('Error searching user:', exception)
   }
 }
 
 
 async function signup(event) {
-   event.preventDefault();
-  const email = document.getElementById('email-signup').value;
-  const password = document.getElementById('password-signup').value;
-  const nickname = document.getElementById('nickname').value;
-  const confirmPassword = document.getElementById('confirm-password-signup').value;
-  const errorText = document.getElementById('signup-error');
+   event.preventDefault()
+  const email = document.getElementById('email-signup').value
+  const password = document.getElementById('password-signup').value
+  const nickname = document.getElementById('nickname').value
+  const confirmPassword = document.getElementById('confirm-password-signup').value
+  const errorText = document.getElementById('signup-error')
   if (password.length < 8) {
-    errorText.textContent = 'La contraseña debe tener al menos 8 caracteres';
-    return;
+    errorText.textContent = 'La contraseña debe tener al menos 8 caracteres'
+    return
   }
   if (password !== confirmPassword) {
-    errorText.textContent = 'Las contraseñas no coinciden';
-    return;
+    errorText.textContent = 'Las contraseñas no coinciden'
+    return
   }
 
-  isCreatingAccount = true;
+  isCreatingAccount = true
   const { data, error } = await supabase.auth.signUp({
     "email": email,
     "password": password,
-  });
+  })
 
   if (data.user) {
-    console.log('User signed up:', data.user);
-    console.log('User id:', data.user.id);
+    console.log('User signed up:', data.user)
+    console.log('User id:', data.user.id)
     let myModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-signup'))
     myModal.hide()
     try {
@@ -128,171 +189,177 @@ async function signup(event) {
           "nickname": nickname
         }
       )
-      console.log('User created:', user);
-      updateUIForLoggedInUser();
+      console.log('User created:', user)
+      updateUIForLoggedInUser()
     } catch (exception) {
-      console.error('Error creating user:', exception);
-      errorText.textContent = 'Error al crear el usuario';
+      console.error('Error creating user:', exception)
+      errorText.textContent = 'Error al crear el usuario'
     }
   } else {
-    console.error('Error creating user:', error);
-    errorText.textContent = 'Error al crear el usuario';
+    console.error('Error creating user:', error)
+    errorText.textContent = 'Error al crear el usuario'
   }
  
 }
 
-async function login() {
-  event.preventDefault();
-  const email = document.getElementById('email-login').value;
-  const password = document.getElementById('password-login').value;
-  const errorText = document.getElementById('login-error');
+async function login(event) {
+  event.preventDefault()
+  const email = document.getElementById('email-login').value
+  const password = document.getElementById('password-login').value
+  const errorText = document.getElementById('login-error')
   const { data, error } = await supabase.auth.signInWithPassword({
     "email": email,
     "password": password,
-  });
+  })
 
   if (data.user) {
-    console.log('User logged in:', data);
+    console.log('User logged in:', data)
     let modalLogin = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-login'))
     try {
       modalLogin.hide()
-      console.log('User data:', user);
+      console.log('User data:', user)
     } catch (exception) {
-      errorText.textContent = 'Error al iniciar sesión';
-      console.error('Error logging in:', error);
+      errorText.textContent = 'Error al iniciar sesión'
+      console.error('Error logging in:', error)
     }
   } else {
-    errorText.textContent = 'Error al iniciar sesión';
-    console.error('Error logging in:', error);
+    errorText.textContent = 'Error al iniciar sesión'
+    console.error('Error logging in:', error)
   }
 
 }
 
-window.addEventListener('scroll', debounce(handleScroll, 1000));
+window.addEventListener('scroll', debounce(handleScroll, 1000))
 
-const profileForm = document.getElementById('form-profile');
-profileForm.addEventListener('submit', async function (event) {
-  event.preventDefault();
-  const file = document.getElementById('profile-picture-input').files[0];
-  let fileUrl;
+async function updateProfile(event) {
+  event.preventDefault()
+  const file = document.getElementById('profile-picture-input').files[0]
+  let fileUrl
   if (file) {
-    console.log('File selected:', file);
-    const user_id = user.supabase_id;
-    fileUrl = await uploadProfilePicture(file, user_id);
+    console.log('File selected:', file)
+    const user_id = user.supabase_id
+    fileUrl = await uploadProfilePicture(file, user_id)
   }
-  const description = document.getElementById('profile-description').value;
+  const description = document.getElementById('profile-description').value
   try {
-    console.log('Updating user:', user);
+    console.log('Updating user:', user)
     user = await updateUser({
       "id": user.id,
       "description": description,
       "profile_picture": fileUrl,
-    });
-    updateUIForLoggedInUser();
+    })
+    updateUIForLoggedInUser()
   } catch (exception) {
-    console.error('Error updating user:', exception);
+    console.error('Error updating user:', exception)
   }
-});
 
-const postCreateForm = document.getElementById('post-create-form');
-postCreateForm.addEventListener('submit', async function (event) {
-  event.preventDefault();
-  const text = document.getElementById('post-text').value;
-  const file = document.getElementById('post-file-input').files[0];
-  const errorText = document.getElementById('post-error');
-  let fileUrl = null;
-  let fileType = 'none';
+}
+
+async function uploadPost(event) {
+  event.preventDefault()
+  const text = document.getElementById('post-text').value
+  const file = document.getElementById('post-file-input').files[0]
+  const errorText = document.getElementById('post-error')
+  let fileUrl = null
+  let fileType = 'none'
   if (file) {
-    fileUrl = await uploadPostFile(file);
+    fileUrl = await uploadPostFile(file)
     if (fileUrl) {
-      fileType = file.type.includes('image') ? 'image' : file.type.includes('video') ? 'video' : 'none';
+      fileType = file.type.includes('image') ? 'image' : file.type.includes('video') ? 'video' : 'none'
     } else {
-      errorText.textContent = 'Error al subir el archivo';
-      return;
+      errorText.textContent = 'Error al subir el archivo'
+      return
     }
   }
-  console.log('User:', user);
-  console.log('User id:', user.id);
+  console.log('User:', user)
+  console.log('User id:', user.id)
   createPost({
     "user": user.id,
     "text": text,
     "file": fileUrl,
     "file_type": fileType
   }).then(() => {
-    console.log('Post created successfully');
-    postCreateForm.reset();
+    console.log('Post created successfully')
+    postCreateForm.reset()
   }).catch((error) => {
-    console.error('Error creating post:', error);
+    console.error('Error creating post:', error)
   })
-});
+
+}
 
 function updateUIForLoggedInUser() {
   console.log("Updating UI log in")
-  const loginButton = document.getElementById('login-button');
-  const profilePictureDiv = document.getElementById('profile-picture-div');
-  const description = document.getElementById('profile-description');
-  const profileTitle = document.getElementById('profile-title');
-  const profilePicture = document.querySelectorAll('.profile-picture');
-  const postCreateForm = document.getElementById('post-create-form');
+  const loginButton = document.getElementById('login-button')
+  const profilePictureDiv = document.getElementById('profile-picture-div')
+  const description = document.getElementById('profile-description')
+  const profileTitle = document.getElementById('profile-title')
+  const profilePicture = document.querySelectorAll('.profile-picture')
+  const postCreateForm = document.getElementById('post-create-form')
+  const followButton = document.getElementById('follow-button')
+  const unfollowButton = document.getElementById('unfollow-button')
 
-  loginButton.style.display = 'none';
-  profilePictureDiv.style.display = 'block';
+  loginButton.style.display = 'none'
+  profilePictureDiv.style.display = 'block'
   postCreateForm.style.display = 'block'
-  profileTitle.textContent = `${user.nickname}`;
-  description.value = user.description ? user.description : '';
+  followButton.style.display = 'block'
+  profileTitle.textContent = `${user.nickname}`
+  description.value = user.description ? user.description : ''
   profilePicture.forEach(picture => {
     if (user.profile_picture)
-      picture.src = `${user.profile_picture}?t=${Date.now()}`; // Force reload using datetime
+      picture.src = `${user.profile_picture}?t=${Date.now()}` // Force reload using datetime
     else
-      picture.src = defaultUserPicture;
-  });
+      picture.src = defaultUserPicture
+  })
 }
 
 
 async function handleScroll() {
-  if (loading === true) return;
+  if (loading === true) return
   if ((window.innerHeight + window.scrollY) >= document.body.scrollHeight) {
-    loading = true;
+    loading = true
     if (showingUserPosts) {
       showUserPosts()
-    } else {
+    } else if(showingFollowingPosts) {
+      showFollowingPosts()
+    } else if (showingLatestPosts) {
       showLatestPosts()
     }
   }
 }
 
 function debounce(func, delay) {
-  let timeout;
+  let timeout
   return function (...args) {
     clearTimeout(timeout)
     timeout = setTimeout(() => {
       func(...args)
-    }, delay);
-  };
+    }, delay)
+  }
 }
 
 async function showPosts(url, requiresToken) {
-  const loader = document.getElementById('loader');
-  loader.style.display = 'block';
+  const loader = document.getElementById('loader')
+  loader.style.display = 'block'
   try {
-    const posts = await loadPosts(url, dateLastPostRetrieved, requiresToken);
+    const posts = await loadPosts(url, dateLastPostRetrieved, requiresToken)
     if (posts.length > 0) {
-      console.log("ES 0");
+      console.log("ES 0")
       dateLastPostRetrieved = new Date(posts[posts.length - 1].date_uploaded).getTime()
+      console.log('Ahora la fecha es', dateLastPostRetrieved)
     }
     posts.forEach(post => {
-      if (post.id === lastPostId) return;
-      lastPostId = post.id;
-      console.log("OAHDJLKAHDLJADHAOL");
+      if (post.id === lastPostId) return
+      lastPostId = post.id
+      console.log("OAHDJLKAHDLJADHAOL")
       
-      console.log(post);
+      console.log(post)
       const date = new Date(post.date_uploaded)
       const day = date.getDate()
       const monthAbbreviation = date.toLocaleString('es-ES', { month: 'short' })
       const year = date.getFullYear()
       let userProfilePicture = post.user.profile_picture ? `${post.user.profile_picture}?t=${Date.now()}`: defaultUserPicture
       let content = `
-        <div class="card mx-auto mb-3 bg-dark-blue border-subtle">
+        <div class="card mx-auto mb-3 bg-dark-blue border-subtle pb-5">
                 <div class="card-body">
                     <div class="row mb-3">
                         <div class="col-6">
@@ -302,7 +369,7 @@ async function showPosts(url, requiresToken) {
                             </h2>
                         </div>
                         <div class="col-6 text-end">
-                            <p>${day} ${monthAbbreviation} ${year}</p>
+                            <p class="text-white">${day} ${monthAbbreviation} ${year}</p>
                         </div>
                     </div> `
       content += post.file_type === 'image' ?
@@ -315,33 +382,56 @@ async function showPosts(url, requiresToken) {
                        src="${post.file}"></video>`
           : ''
       content +=
-        `<p class="card-text text-white">${post.text}</p>
+        `<p class="card-text text-white pt-3">${post.text}</p>
+          <div class="position-absolute bottom-0 end-0 p-2 text-center text-white">
+            <p><button class="like-button btn btn-link text-white text-decoration-none" data-id="${post.id}">
+              <span class="pe-3">${post.likes}</span><i class="fa fa-thumbs-up fa-2x" aria-hidden="true"></i>
+            </button></p>
+          </div>
                 </div>
             </div>
        `
       postContainer.innerHTML += content
-      console.log(content);
-      
-    });
-    loading = false;
-    loader.style.display = 'none';
+    })
+    loading = false
+    loader.style.display = 'none'
   } catch (error) {
-    console.error('Error loading posts:', error);
+    console.error('Error loading posts:', error)
     postContainer.innerHTML = `
         <div class="alert alert-danger" role="alert">
             Error loading posts
         </div>
-      `;
+      `
   }
 }
 
 function showLatestPosts() {
-  showingUserPosts = false;
-  showPosts('posts/latest', false);
+  showingLatestPosts = true
+  showingFollowingPosts = false
+  showingUserPosts = false
+  showPosts('posts/latest', false)
+}
+
+function showFollowingPosts() {
+  showingLatestPosts = false
+  showingFollowingPosts = true
+  showingUserPosts = false
+  console.log("showuserposts")
+  showPosts('posts/following', true)
 }
 
 function showUserPosts() {
-  showingUserPosts = true;
-  console.log("showuserposts");
-  showPosts('posts/following', true);
+  showingLatestPosts = false
+  showingFollowingPosts = false
+  showingUserPosts = true
+  showPosts(`users/${userFoundId}/posts`, true)
 }
+
+document.addEventListener('click', async function(event) {
+  if (event.target.closest('.like-button')) {
+    const button = event.target.closest('.like-button')
+    const postId = button.dataset.id
+    const result = await likePost(postId)
+    button.innerHTML = `<span class="pe-3">${result.likes}</span><i class="fa fa-thumbs-up fa-2x" aria-hidden="true"></i>`
+  }
+})
