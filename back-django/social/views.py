@@ -19,7 +19,7 @@ SECRET_KEY = os.getenv('SECRET_KEY_SUPABASE')
 ALGORITHM = "HS256"
 AUDIENCE = "authenticated"
 
-POSTS_PER_PAGE = 2
+POSTS_PER_PAGE = 5
 
 def get_token_data(token):
     if SECRET_KEY is None:

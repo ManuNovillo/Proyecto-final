@@ -11,14 +11,14 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 
-<body class="bg-dark">
-    <header class="py-3 sticky-top bg-dark border-bottom-1 border-bottom-subtle">
+<body>
+    <header class="py-3 sticky-top">
         <div class="container">
             <div class="row justify-content-between align-items-center">
-                <div class="col-4">
+                <div class="col-4 text-start">
                     <a href="" onclick="location.reload()">
-                        <img src="/img/logo.png" alt="DragonFly logo"
-                            width="100" height="100" class="rounded-circle">
+                        <img src="/img/logo.png" alt="BlueLight logo"
+                            width="75" height="75" class="rounded-circle">
                     </a>
                 </div>
                 <div class="col-4 text-center">
@@ -35,7 +35,7 @@
                 </div>
                 <div class="col-4 text-end" id="profile-picture-div">
                     <a href="" data-bs-target="#modal-perfil" data-bs-toggle="modal">
-                        <img class="profile-picture rounded-circle" src="" alt="Profile picture" width="75" height="75">
+                        <img class="profile-picture rounded-circle object-cover" src="" alt="Profile picture" width="75" height="75">
                     </a>
                 </div>
             </div>
@@ -48,10 +48,10 @@
                     <div id="posts-selector" class="text-center sticky-lg-top">
                         <ul class="list-unstyled">
                             <li class="mb-5">
-                                <button id="show-latest-posts" class="btn btn-link text-decoration-none text-white border-bottom-subtle"><h1>Discover</h1></button>
+                                <button id="show-latest-posts" class="btn btn-link text-decoration-none text-white"><h1>Discover</h1></button>
                             </li>
                             <li class="mt-5">
-                                <button id="show-user-posts" class="btn btn-link text-decoration-none text-white border-bottom-subtle"><h1>Feed</h1></button>
+                                <button id="show-user-posts" class="btn btn-link text-decoration-none text-white" style="display: none;"><h1>Feed</h1></button>
                             </li>
                         </ul>
                     </div>
@@ -60,7 +60,7 @@
                     <div id="user-data">
                         <div class="row align-items-center mb-3">
                             <div class="col-6 text-center">
-                                <img id="user-found-profile-picture"
+                                <img id="user-found-profile-picture object-cover"
                                     src=""
                                     width="200" height="200" class="rounded-circle border border-2 border-dark"
                                     alt="Logo">
@@ -89,7 +89,7 @@
                                 </div>
                             </div>
                             <div class="col-6 text-end">
-                                <button type="submit" class="btn btn-success mt-1 mb-3">Publicar</button>
+                                <button type="submit" class="btn bg-white mt-1 mb-3 text-primary">Publicar</button>
                             </div>
                         </div>
                     </form>
@@ -99,7 +99,6 @@
                 </div>
                 
                 <div class="col-lg-4">
-                    
                 </div>
             </div>
         </div>
@@ -211,7 +210,7 @@
                     <div class="modal-body">
                         <div class="text-center">
                             <div class="position-relative d-inline-block mx-auto">
-                                <img class="profile-picture rounded-circle border border-2 border-dark" src=""
+                                <img class="profile-picture rounded-circle border border-2 border-dark object-cover" src=""
                                     width="300" height="300" alt="Logo" />
                                 <label for="profile-picture-input" class="position-absolute bottom-0 end-0 me-2 mb-1">
                                     <i class="fa fa-pencil text-white rounded-circle bg-black p-2 image-upload"

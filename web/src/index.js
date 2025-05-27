@@ -39,6 +39,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     console.log('User:', user)
   } else if (event === 'SIGNED_OUT') {
     user = null
+    updateUIForLogedOutUser()
   }
 })
 
@@ -227,7 +228,30 @@ async function login(event) {
     errorText.textContent = 'Error al iniciar sesión'
     console.error('Error logging in:', error)
   }
+}
 
+async function logout() {
+  const { error } = await supabase.auth.signOut() 
+  if (error) {
+    console.error('Error logging out:', error)
+  } else {
+    console.log('User logged out')
+  }
+}
+
+function updateUIForLogedOutUser() {
+  console.log("Updating UI log in")
+  const loginButton = document.getElementById('login-button')
+  const profilePictureDiv = document.getElementById('profile-picture-div')
+  const postCreateForm = document.getElementById('post-create-form')
+  const followButton = document.getElementById('follow-button')
+  const showFeedButton = document.getElementById('show-user-posts') 
+
+  loginButton.style.display = 'block'
+  profilePictureDiv.style.display = 'none'
+  postCreateForm.style.display = 'none'
+  followButton.style.display = 'none'
+  showFeedButton.style.display = 'none'
 }
 
 window.addEventListener('scroll', debounce(handleScroll, 1000))
@@ -285,7 +309,6 @@ async function uploadPost(event) {
   }).catch((error) => {
     console.error('Error creating post:', error)
   })
-
 }
 
 function updateUIForLoggedInUser() {
@@ -297,22 +320,22 @@ function updateUIForLoggedInUser() {
   const profilePicture = document.querySelectorAll('.profile-picture')
   const postCreateForm = document.getElementById('post-create-form')
   const followButton = document.getElementById('follow-button')
-  const unfollowButton = document.getElementById('unfollow-button')
+  const showFeedButton = document.getElementById('show-user-posts') 
 
   loginButton.style.display = 'none'
   profilePictureDiv.style.display = 'block'
   postCreateForm.style.display = 'block'
   followButton.style.display = 'block'
   profileTitle.textContent = `${user.nickname}`
+  showFeedButton.style.display = 'inline-block'
   description.value = user.description ? user.description : ''
   profilePicture.forEach(picture => {
     if (user.profile_picture)
-      picture.src = `${user.profile_picture}?t=${Date.now()}` // Force reload using datetime
+      picture.src = `${user.profile_picture}?t=${Date.now()}`
     else
       picture.src = defaultUserPicture
   })
 }
-
 
 async function handleScroll() {
   if (loading === true) return
@@ -360,12 +383,12 @@ async function showPosts(url, requiresToken) {
       const year = date.getFullYear()
       let userProfilePicture = post.user.profile_picture ? `${post.user.profile_picture}?t=${Date.now()}`: defaultUserPicture
       let content = `
-        <div class="card mx-auto mb-3 bg-dark-blue border-subtle pb-5">
+        <div class="card mx-auto mb-3 bg-transparent border-subtle pb-5">
                 <div class="card-body">
                     <div class="row mb-3">
                         <div class="col-6">
                             <h2>
-                              <img src="${userProfilePicture}?t=${Date.now}" width="100" height="100" class="rounded-circle">
+                              <img src="${userProfilePicture}?t=${Date.now}" width="100" height="100" class="rounded-circle object-cover">
                               <a href='' class="text-decoration-none text-white" >${post.user.nickname}</a>
                             </h2>
                         </div>
@@ -374,7 +397,7 @@ async function showPosts(url, requiresToken) {
                         </div>
                     </div> `
       content += post.file_type === 'image' ?
-        `<img class="card-img-top"
+        `<img class="card-img-top object-cover"
                         src="${post.file}"
                         alt="Post image" />`
 
