@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
     postContainer.innerHTML = ''
     const userContainer = document.getElementById('user-data')
     userContainer.style.display = 'none'
+    postCreateForm.style.display = 'block'
     showLatestPosts()
   })
 

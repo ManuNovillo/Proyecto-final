@@ -29,7 +29,8 @@ def get_token_data(token):
             token,
             SECRET_KEY,
             algorithms=[ALGORITHM],
-            audience=AUDIENCE
+            audience=AUDIENCE,
+            leeway=10
         )
         return decoded
     except InvalidTokenError as e:
