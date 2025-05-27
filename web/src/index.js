@@ -383,7 +383,7 @@ async function showPosts(url, requiresToken) {
       const year = date.getFullYear()
       let userProfilePicture = post.user.profile_picture ? `${post.user.profile_picture}?t=${Date.now()}`: defaultUserPicture
       let content = `
-        <div class="card mx-auto mb-3 bg-transparent border-subtle pb-5">
+        <div class="card mx-auto mb-3 bg-transparent-gray border-subtle pb-5">
                 <div class="card-body">
                     <div class="row mb-3">
                         <div class="col-6">

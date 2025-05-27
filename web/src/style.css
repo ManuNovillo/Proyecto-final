@@ -97,6 +97,7 @@ header {
   background-attachment: fixed
 }
 
-p {
-  text-shadow: 2px 2px 0px #000000;
+.bg-transparent-gray {
+  background-color: rgba(53, 52, 52, 0.301);
 }
+
