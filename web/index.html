@@ -2,7 +2,8 @@
 <html lang="en">
 
 <head>
-    <title>Title</title>
+    <title>BlueLight</title>
+    <link rel="icon" href="img/icon.png" type="image/png">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -24,8 +25,8 @@
                 <div class="col-4 text-center">
                     <form id="form-search-user">
                         <input id="search-user-input" type="text"
-                            class="w-75 bg-dark text-white rounded-3 border-subtle border-2" placeholder="Buscar">
-                        <button type="submit" class="btn btn-success mt-3 mt-xl-0">Buscar</button>
+                            class="w-75 bg-white text-dark rounded-3 border-subtle border-2" placeholder="Buscar">
+                        <button type="submit" class="btn bg-white text-primary mt-3 mt-xl-0">Buscar</button>
                     </form>
                     <p id="search-user-error" class="text-danger mt-1"></p>
                 </div>
@@ -48,10 +49,10 @@
                     <div id="posts-selector" class="text-center sticky-lg-top">
                         <ul class="list-unstyled">
                             <li class="mb-5">
-                                <button id="show-latest-posts" class="btn btn-link text-decoration-none text-white"><h1>Discover</h1></button>
+                                <button id="show-latest-posts" class="btn btn-link text-decoration-none text-white text-shadow"><h1>Discover</h1></button>
                             </li>
                             <li class="mt-5">
-                                <button id="show-user-posts" class="btn btn-link text-decoration-none text-white" style="display: none;"><h1>Feed</h1></button>
+                                <button id="show-user-posts" class="btn btn-link text-decoration-none text-white text-shadow" style="display: none;"><h1>Feed</h1></button>
                             </li>
                         </ul>
                     </div>
@@ -69,15 +70,15 @@
                                 <h3></h3>
                                 <p></p>
                                 <button id="follow-button" style="display:none;" class="btn btn-success mb-2">Seguir</button>
-                                <button id="unfollow-button" style="display:none;" class="btn btn-danger mt-2">Dejar de
-                                    seguir</button>
+                                <button id="unfollow-button" style="display:none;" class="btn btn-danger mt-2">Dejar de seguir</button>
                             </div>
                         </div>
                     </div>
 
-                    <form id="post-create-form" novalidate>
-                        <textarea class="bg-dark border-subtle w-100 text-white" name="post-text" id="post-text"
+                    <form id="post-create-form" novalidate> 
+                        <textarea class="bg-transparent-gray border-subtle w-100 text-white" name="post-text" id="post-text"
                             placeholder="Di lo que estás pensando" maxlength="450"></textarea>
+                        <p id="post-file-name" class="bg-transparent-gray"></p>
                         <div class="row justify-content-between align-items-center">
                             <div class="col-6">
                                 <div class="position-relative d-inline-block mx-auto">
@@ -97,9 +98,7 @@
                         
                     </div>
                 </div>
-                
-                <div class="col-lg-4">
-                </div>
+                <div class="col-lg-4"></div>
             </div>
         </div>
 
@@ -200,10 +199,10 @@
     <div class="modal fade" id="modal-perfil" tabindex="-1" data-bs-keyboard="false" role="dialog"
         aria-labelledby="modalTitleId" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg" role="document">
-            <div class="modal-content bg-dark text-white">
+            <div class="modal-content bg-white text-blue">
                 <div class="modal-header">
                     <h5 class="modal-title" id="profile-title">Perfil de MEMES</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <form id="form-profile">
@@ -212,18 +211,21 @@
                             <div class="position-relative d-inline-block mx-auto">
                                 <img class="profile-picture rounded-circle border border-2 border-dark object-cover" src=""
                                     width="300" height="300" alt="Logo" />
+                                <p id="profile-picture-name" class="bg-transparent-gray"></p>
                                 <label for="profile-picture-input" class="position-absolute bottom-0 end-0 me-2 mb-1">
-                                    <i class="fa fa-pencil text-white rounded-circle bg-black p-2 image-upload"
+                                    <i class="fa fa-pencil text-primary rounded-circle bg-info-subtle p-2 image-upload"
                                         aria-hidden="true"></i>
                                 </label>
                                 <input class="file-input" id="profile-picture-input" type="file" />
                             </div>
                         </div>
                         <br>
-                        <textarea name="profile-description" id="profile-description" maxlength="100"
-                            class="w-100 rounded-2"></textarea>
+                        <div class="text-center">
+                            <textarea name="profile-description" id="profile-description" maxlength="100"
+                                class="w-50 rounded-2"></textarea>
+                        </div>
                         <br>
-                        <button class="mt-5">CERRAR SESION</button>
+                        <button class="mt-5 btn bg-white text-primary">CERRAR SESION</button>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-danger" data-bs-dismiss="modal">

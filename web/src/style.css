@@ -1,3 +1,13 @@
+body {
+  background: linear-gradient(0deg,rgba(217, 217, 217, 1) 0%, rgba(29, 96, 150, 1) 50%, rgba(11, 32, 89, 1) 100%);
+  background-attachment: fixed
+}
+
+header {
+  background: linear-gradient(0deg,rgba(217, 217, 217, 1) 0%, rgba(29, 96, 150, 1) 50%, rgba(11, 32, 89, 1) 100%);
+  background-attachment: fixed
+}
+
 .file-input {
   visibility: hidden;
   width: 0;
@@ -29,6 +39,10 @@
   position: relative;
   margin: 0 auto;
   overflow: hidden;
+}
+
+textarea {
+  resize: none;
 }
 
 #loader:before,
@@ -87,17 +101,10 @@ li a {
   background:  linear-gradient(-45deg, rgba(102, 100, 100, 1) 0%, rgba(24, 24, 26, 1) 59%, rgba(15, 15, 38, 1) 100%);
 }
 
-body {
-  background: linear-gradient(0deg,rgba(217, 217, 217, 1) 0%, rgba(29, 96, 150, 1) 50%, rgba(11, 32, 89, 1) 100%);
-  background-attachment: fixed
-}
-
-header {
-  background: linear-gradient(0deg,rgba(217, 217, 217, 1) 0%, rgba(29, 96, 150, 1) 50%, rgba(11, 32, 89, 1) 100%);
-  background-attachment: fixed
-}
-
 .bg-transparent-gray {
-  background-color: rgba(53, 52, 52, 0.301);
+  background-color: rgba(53, 52, 52, 0.500);
 }
 
+.text-shadow {
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}

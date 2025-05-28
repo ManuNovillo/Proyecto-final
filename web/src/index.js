@@ -155,7 +155,6 @@ async function searchUser(event) {
   }
 }
 
-
 async function signup(event) {
    event.preventDefault()
   const email = document.getElementById('email-signup').value
@@ -280,6 +279,29 @@ async function updateProfile(event) {
 
 }
 
+const postFileInput = document.getElementById('post-file-input')
+postFileInput.addEventListener('change', function() {
+  const file = postFileInput.files[0]
+  const fileName = document.getElementById('post-file-name')
+  if (file) {
+    const icon = file.type.includes('image') ? 'fa-camera' : file.type.includes('video') ? 'fa-video-camera' : 'fa-file';
+    fileName.innerHTML = `<i class="fa ${icon} ps-2 me-2" aria-hidden="true"></i> ${file.name}`
+  } else {
+    fileName.innerHTML = ''
+  }
+})
+
+const profilePictureInput = document.getElementById('profile-picture-input')
+profilePictureInput.addEventListener('change', function() {
+  const file = profilePictureInput.files[0]
+  const profilePictureName = document.getElementById('profile-picture-name')
+  if (file) {
+    profilePictureName.innerHTML = `<i class="fa fa-camera ps-2 me-2" aria-hidden="true"></i> ${file.name}`
+  } else {
+    profilePictureName.innerHTML = ''
+  }
+})
+
 async function uploadPost(event) {
   event.preventDefault()
   const text = document.getElementById('post-text').value
@@ -389,11 +411,11 @@ async function showPosts(url, requiresToken) {
                         <div class="col-6">
                             <h2>
                               <img src="${userProfilePicture}?t=${Date.now}" width="100" height="100" class="rounded-circle object-cover">
-                              <a href='' class="text-decoration-none text-white" >${post.user.nickname}</a>
+                              <a href='' class="text-decoration-none text-white text-shadow" >${post.user.nickname}</a>
                             </h2>
                         </div>
                         <div class="col-6 text-end">
-                            <p class="text-white">${day} ${monthAbbreviation} ${year}</p>
+                            <p class="text-white text-shadow">${day} ${monthAbbreviation} ${year}</p>
                         </div>
                     </div> `
       content += post.file_type === 'image' ?
@@ -453,6 +475,10 @@ function showUserPosts() {
 
 document.addEventListener('click', async function(event) {
   if (event.target.closest('.like-button')) {
+    if (user === null) {
+      console.log('User is not logged in')
+      return
+    }
     const button = event.target.closest('.like-button')
     const postId = button.dataset.id
     const result = await likePost(postId)
