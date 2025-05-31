@@ -153,7 +153,7 @@ def update_user_profile(request, id):
 def get_user_by_nickname(request, nickname):
     print(nickname)
     print("dadadd")
-    user = get_object_or_404(User, nickname=nickname, deleted=False)
+    user = get_object_or_404(User, nickname__iexact=nickname, deleted=False)
     serializer = UserSerializer(user)
     return JsonResponse(serializer.data, safe=False)
 

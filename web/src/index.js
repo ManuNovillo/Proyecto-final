@@ -44,7 +44,17 @@ supabase.auth.onAuthStateChange(async (event, session) => {
 
 document.addEventListener('DOMContentLoaded', function () {
   const searchUserForm = document.getElementById('form-search-user')
-  searchUserForm.addEventListener('submit', searchUser)
+  searchUserForm.addEventListener('submit', function (event) {
+    event.preventDefault()
+    const name = document.getElementById('search-user-input').value
+    const errorText = document.getElementById('search-user-error')
+    if (name.length == 0) {
+      errorText.textContent = 'Introduce un nombre de usuario'
+      return
+    }
+    errorText.textContent = ''
+    searchUser(name)
+  })
 
   signUpForm.addEventListener('submit', signup)
   loginForm.addEventListener('submit', login)
@@ -52,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
   postCreateForm.addEventListener('submit', uploadPost)
   logoutButton.addEventListener('click', logout)
 
-  showLatestPostsButton.addEventListener('click', function() {
+  showLatestPostsButton.addEventListener('click', function () {
     dateLastPostRetrieved = Date.now()
     postContainer.innerHTML = ''
     const userContainer = document.getElementById('user-data')
@@ -62,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function () {
   })
 
   const showUserPostsButton = document.getElementById('show-user-posts')
-  showUserPostsButton.addEventListener('click', function() {
+  showUserPostsButton.addEventListener('click', function () {
     dateLastPostRetrieved = Date.now()
     postContainer.innerHTML = ''
     const userContainer = document.getElementById('user-data')
@@ -105,17 +115,9 @@ supabase.auth.getSession().then(async ({ data: { session } }) => {
   }
 })
 
-async function searchUser(event) {
-  event.preventDefault()
-  const searchInput = document.getElementById('search-user-input').value
-  const errorText = document.getElementById('search-user-error')
-  if (searchInput.length == 0) {
-    errorText.textContent = 'Introduce un nombre de usuario'
-    return
-  }
+async function searchUser(name) {
   try {
-    const userFound = await getUserByName(searchInput)
-    errorText.textContent = ''
+    const userFound = await getUserByName(name)
     console.log('User found:', userFound)
     userFoundId = userFound.id
     const userContainer = document.getElementById('user-data')
@@ -125,15 +127,21 @@ async function searchUser(event) {
     unfollowButton.style.display = 'block'
     userContainer.style.display = 'block'
     postCreateForm.style.display = 'none'
-    if (userFound.id === user?.id) {
-      console.log('User found is the same as logged in user');
-      followButton.style.display = 'none'
-      unfollowButton.style.display = 'none'
-    } else if (user?.following?.includes(userFound.id)) {
-      followButton.style.display = 'none'
-      unfollowButton.style.display = 'block'
+    if (user) {
+      if (userFound.id === user.id) {
+        console.log('User found is the same as logged in user');
+        followButton.style.display = 'none'
+        unfollowButton.style.display = 'none'
+      } else if (user.following?.includes(userFound.id)) {
+        followButton.style.display = 'none'
+        unfollowButton.style.display = 'block'
+      } else {
+        followButton.style.display = 'block'
+        unfollowButton.style.display = 'none'
+      }
     } else {
-      followButton.style.display = 'block'
+      console.log('User not logged in, showing follow button');
+      followButton.style.display = 'none'
       unfollowButton.style.display = 'none'
     }
     const img = userContainer.querySelector("img")
@@ -146,13 +154,14 @@ async function searchUser(event) {
     postContainer.innerHTML = ''
     showUserPosts()
   } catch (exception) {
-    errorText.textContent = 'Uusuario no encontrado'
+    const errorText = document.getElementById('search-user-error')
+    errorText.textContent = 'Usuario no encontrado'
     console.error('Error searching user:', exception)
   }
 }
 
 async function signup(event) {
-   event.preventDefault()
+  event.preventDefault()
   const emailField = document.getElementById('email-signup')
   const passwordField = document.getElementById('password-signup')
   const nicknameField = document.getElementById('nickname')
@@ -191,6 +200,12 @@ async function signup(event) {
         }
       )
       console.log('User created:', user)
+      isCreatingAccount = false
+      emailField.value = ''
+      passwordField.value = ''
+      nicknameField.value = ''
+      confirmPasswordField.value = ''
+      errorTextField.textContent = ''
       updateUIForLoggedInUser()
     } catch (exception) {
       console.error('Error creating user:', exception)
@@ -200,12 +215,6 @@ async function signup(event) {
     console.error('Error creating user:', error)
     errorTextField.textContent = 'Error al crear el usuario'
   }
-  isCreatingAccount = false
-  emailField.value = ''
-  passwordField.value = ''
-  nicknameField.value = ''
-  confirmPasswordField.value = ''
-  errorTextField.textContent = ''
 }
 
 async function login(event) {
@@ -235,7 +244,7 @@ async function login(event) {
 }
 
 async function logout() {
-  const { error } = await supabase.auth.signOut() 
+  const { error } = await supabase.auth.signOut()
   if (error) {
     console.error('Error logging out:', error)
   } else {
@@ -253,7 +262,7 @@ function updateUIForLoggedOutUser() {
   const profilePicture = document.querySelectorAll('.profile-picture')
   const postCreateForm = document.getElementById('post-create-form')
   const followButton = document.getElementById('follow-button')
-  const showFeedButton = document.getElementById('show-user-posts') 
+  const showFeedButton = document.getElementById('show-user-posts')
 
   loginButton.style.display = 'block'
   profilePictureDiv.style.display = 'none'
@@ -296,7 +305,7 @@ async function updateProfile(event) {
 }
 
 const postFileInput = document.getElementById('post-file-input')
-postFileInput.addEventListener('change', function() {
+postFileInput.addEventListener('change', function () {
   const file = postFileInput.files[0]
   const fileName = document.getElementById('post-file-name')
   if (file) {
@@ -308,7 +317,7 @@ postFileInput.addEventListener('change', function() {
 })
 
 const profilePictureInput = document.getElementById('profile-picture-input')
-profilePictureInput.addEventListener('change', function() {
+profilePictureInput.addEventListener('change', function () {
   const file = profilePictureInput.files[0]
   const profilePictureName = document.getElementById('profile-picture-name')
   if (file) {
@@ -361,7 +370,7 @@ function updateUIForLoggedInUser() {
   const profilePicture = document.querySelectorAll('.profile-picture')
   const postCreateForm = document.getElementById('post-create-form')
   const followButton = document.getElementById('follow-button')
-  const showFeedButton = document.getElementById('show-user-posts') 
+  const showFeedButton = document.getElementById('show-user-posts')
 
   loginButton.style.display = 'none'
   profilePictureDiv.style.display = 'block'
@@ -384,7 +393,7 @@ async function handleScroll() {
     loading = true
     if (showingUserPosts) {
       showUserPosts()
-    } else if(showingFollowingPosts) {
+    } else if (showingFollowingPosts) {
       showFollowingPosts()
     } else if (showingLatestPosts) {
       showLatestPosts()
@@ -416,13 +425,13 @@ async function showPosts(url, requiresToken) {
       if (post.id === lastPostId) return
       lastPostId = post.id
       console.log("OAHDJLKAHDLJADHAOL")
-      
+
       console.log(post)
       const date = new Date(post.date_uploaded)
       const day = date.getDate()
       const monthAbbreviation = date.toLocaleString('es-ES', { month: 'short' })
       const year = date.getFullYear()
-      let userProfilePicture = post.user.profile_picture ? `${post.user.profile_picture}?t=${Date.now()}`: defaultUserPicture
+      let userProfilePicture = post.user.profile_picture ? `${post.user.profile_picture}?t=${Date.now()}` : defaultUserPicture
       let content = `
         <div class="card mx-auto mb-3 bg-transparent-gray border-subtle pb-5">
                 <div class="card-body">
@@ -430,7 +439,8 @@ async function showPosts(url, requiresToken) {
                         <div class="col-6">
                             <h2>
                               <img src="${userProfilePicture}?t=${Date.now}" width="100" height="100" class="rounded-circle object-cover">
-                              <a href='' class="text-decoration-none text-white text-shadow" >${post.user.nickname}</a>
+                              <br>
+                              <button href='' class="btn btn-link text-decoration-none text-white text-shadow user-name fs-2 p-0">${post.user.nickname}</button>
                             </h2>
                         </div>
                         <div class="col-6 text-end">
@@ -492,7 +502,7 @@ function showUserPosts() {
   showPosts(`users/${userFoundId}/posts`, true)
 }
 
-document.addEventListener('click', async function(event) {
+document.addEventListener('click', async function (event) {
   if (event.target.closest('.like-button')) {
     if (user === null) {
       console.log('User is not logged in')
@@ -502,5 +512,8 @@ document.addEventListener('click', async function(event) {
     const postId = button.dataset.id
     const result = await likePost(postId)
     button.innerHTML = `<span class="pe-3">${result.likes}</span><i class="fa fa-thumbs-up fa-2x" aria-hidden="true"></i>`
+  } else if (event.target.closest('.user-name')) {
+    const userName = event.target.closest('.user-name').textContent
+    searchUser(userName)
   }
 })
