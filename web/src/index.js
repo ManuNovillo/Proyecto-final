@@ -20,26 +20,24 @@ let showingFollowingPosts = false
 let userFoundId = null
 
 const postContainer = document.getElementById('posts')
-
 const signUpForm = document.getElementById('form-signup')
-
 const loginForm = document.getElementById('form-login')
-
 const profileForm = document.getElementById('form-profile')
-
 const postCreateForm = document.getElementById('post-create-form')
-
 const showLatestPostsButton = document.getElementById('show-latest-posts')
+const logoutButton = document.getElementById('logout-button')
 
 supabase.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && !isCreatingAccount) {
+    console.log('User signed in:', session)
     console.log('User signed in auth state:', session)
     user = await getUser(session.user.id)
     updateUIForLoggedInUser()
     console.log('User:', user)
   } else if (event === 'SIGNED_OUT') {
+    console.log('User signed out')
     user = null
-    updateUIForLogedOutUser()
+    updateUIForLoggedOutUser()
   }
 })
 
@@ -49,12 +47,10 @@ document.addEventListener('DOMContentLoaded', function () {
   searchUserForm.addEventListener('submit', searchUser)
 
   signUpForm.addEventListener('submit', signup)
-
   loginForm.addEventListener('submit', login)
-
   profileForm.addEventListener('submit', updateProfile)
-
   postCreateForm.addEventListener('submit', uploadPost)
+  logoutButton.addEventListener('click', logout)
 
   showLatestPostsButton.addEventListener('click', function() {
     dateLastPostRetrieved = Date.now()
@@ -157,17 +153,21 @@ async function searchUser(event) {
 
 async function signup(event) {
    event.preventDefault()
-  const email = document.getElementById('email-signup').value
-  const password = document.getElementById('password-signup').value
-  const nickname = document.getElementById('nickname').value
-  const confirmPassword = document.getElementById('confirm-password-signup').value
-  const errorText = document.getElementById('signup-error')
+  const emailField = document.getElementById('email-signup')
+  const passwordField = document.getElementById('password-signup')
+  const nicknameField = document.getElementById('nickname')
+  const confirmPasswordField = document.getElementById('confirm-password-signup')
+  const errorTextField = document.getElementById('signup-error')
+  const email = emailField.value
+  const password = passwordField.value
+  const nickname = nicknameField.value
+  const confirmPassword = confirmPasswordField.value
   if (password.length < 8) {
-    errorText.textContent = 'La contraseña debe tener al menos 8 caracteres'
+    errorTextField.textContent = 'La contraseña debe tener al menos 8 caracteres'
     return
   }
   if (password !== confirmPassword) {
-    errorText.textContent = 'Las contraseñas no coinciden'
+    errorTextField.textContent = 'Las contraseñas no coinciden'
     return
   }
 
@@ -194,20 +194,27 @@ async function signup(event) {
       updateUIForLoggedInUser()
     } catch (exception) {
       console.error('Error creating user:', exception)
-      errorText.textContent = 'Error al crear el usuario'
+      errorTextField.textContent = 'Error al crear el usuario'
     }
   } else {
     console.error('Error creating user:', error)
-    errorText.textContent = 'Error al crear el usuario'
+    errorTextField.textContent = 'Error al crear el usuario'
   }
- 
+  isCreatingAccount = false
+  emailField.value = ''
+  passwordField.value = ''
+  nicknameField.value = ''
+  confirmPasswordField.value = ''
+  errorTextField.textContent = ''
 }
 
 async function login(event) {
   event.preventDefault()
-  const email = document.getElementById('email-login').value
-  const password = document.getElementById('password-login').value
-  const errorText = document.getElementById('login-error')
+  const emailField = document.getElementById('email-login')
+  const passwordField = document.getElementById('password-login')
+  const email = emailField.value
+  const password = passwordField.value
+  const errorTextField = document.getElementById('login-error')
   const { data, error } = await supabase.auth.signInWithPassword({
     "email": email,
     "password": password,
@@ -216,15 +223,13 @@ async function login(event) {
   if (data.user) {
     console.log('User logged in:', data)
     let modalLogin = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-login'))
-    try {
-      modalLogin.hide()
-      console.log('User data:', user)
-    } catch (exception) {
-      errorText.textContent = 'Error al iniciar sesión'
-      console.error('Error logging in:', error)
-    }
+    emailField.value = ''
+    passwordField.value = ''
+    errorTextField.textContent = ''
+    modalLogin.hide()
+    console.log('User data:', user)
   } else {
-    errorText.textContent = 'Error al iniciar sesión'
+    errorTextField.textContent = 'Error al iniciar sesión'
     console.error('Error logging in:', error)
   }
 }
@@ -235,13 +240,17 @@ async function logout() {
     console.error('Error logging out:', error)
   } else {
     console.log('User logged out')
+    let myModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-perfil'))
+    myModal.hide()
   }
 }
 
-function updateUIForLogedOutUser() {
-  console.log("Updating UI log in")
+function updateUIForLoggedOutUser() {
   const loginButton = document.getElementById('login-button')
   const profilePictureDiv = document.getElementById('profile-picture-div')
+  const description = document.getElementById('profile-description')
+  const profileTitle = document.getElementById('profile-title')
+  const profilePicture = document.querySelectorAll('.profile-picture')
   const postCreateForm = document.getElementById('post-create-form')
   const followButton = document.getElementById('follow-button')
   const showFeedButton = document.getElementById('show-user-posts') 
@@ -250,7 +259,12 @@ function updateUIForLogedOutUser() {
   profilePictureDiv.style.display = 'none'
   postCreateForm.style.display = 'none'
   followButton.style.display = 'none'
+  profileTitle.textContent = ``
   showFeedButton.style.display = 'none'
+  description.value = ''
+  profilePicture.forEach(picture => {
+    picture.src = ''
+  })
 }
 
 window.addEventListener('scroll', debounce(handleScroll, 1000))
@@ -259,6 +273,8 @@ async function updateProfile(event) {
   event.preventDefault()
   const file = document.getElementById('profile-picture-input').files[0]
   let fileUrl
+  const profilePictureName = document.getElementById('profile-picture-name')
+  profilePictureName.innerHTML = ''
   if (file) {
     console.log('File selected:', file)
     const user_id = user.supabase_id
@@ -307,6 +323,8 @@ async function uploadPost(event) {
   const text = document.getElementById('post-text').value
   const file = document.getElementById('post-file-input').files[0]
   const errorText = document.getElementById('post-error')
+  const fileName = document.getElementById('post-file-name')
+  fileName.innerHTML = ''
   let fileUrl = null
   let fileType = 'none'
   if (file) {
@@ -328,6 +346,7 @@ async function uploadPost(event) {
   }).then(() => {
     console.log('Post created successfully')
     postCreateForm.reset()
+    window.location.reload()
   }).catch((error) => {
     console.error('Error creating post:', error)
   })

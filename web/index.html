@@ -31,8 +31,8 @@
                     <p id="search-user-error" class="text-danger mt-1"></p>
                 </div>
                 <div class="col-4 text-end" id="login-button">
-                    <button class="btn btn-success text-white" data-bs-toggle="modal"
-                        data-bs-target="#modal-login">Login</button>
+                    <button class="btn text-primary bg-white" data-bs-toggle="modal"
+                        data-bs-target="#modal-login">Iniciar sesión</button>
                 </div>
                 <div class="col-4 text-end" id="profile-picture-div">
                     <a href="" data-bs-target="#modal-perfil" data-bs-toggle="modal">
@@ -101,8 +101,6 @@
                 <div class="col-lg-4"></div>
             </div>
         </div>
-
-
     </main>
     <footer>
         <div id="loader"></div>
@@ -147,7 +145,7 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             Cancelar
                         </button>
-                        <button type="submit" class="btn btn-primary">Iniciar sesión</button>
+                        <button type="submit" class="btn bg-white text-primary">Iniciar sesión</button>
                     </div>
                 </form>
             </div>
@@ -189,7 +187,7 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             Cancelar
                         </button>
-                        <button type="submit" class="btn btn-primary">Iniciar sesión</button>
+                        <button type="submit" class="btn bg-white text-primary">Crear cuenta</button>
                     </div>
                 </form>
             </div>
@@ -199,10 +197,10 @@
     <div class="modal fade" id="modal-perfil" tabindex="-1" data-bs-keyboard="false" role="dialog"
         aria-labelledby="modalTitleId" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg" role="document">
-            <div class="modal-content bg-white text-blue">
+            <div class="modal-content bg-dark text-white">
                 <div class="modal-header">
                     <h5 class="modal-title" id="profile-title">Perfil de MEMES</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <form id="form-profile">
@@ -225,13 +223,13 @@
                                 class="w-50 rounded-2"></textarea>
                         </div>
                         <br>
-                        <button class="mt-5 btn bg-white text-primary">CERRAR SESION</button>
+                        <button type="button" id="logout-button" class="mt-5 btn bg-white text-primary">Cerrar sesión</button>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
                             Cancelar
                         </button>
-                        <button type="submit" class="btn btn-primary" id="save-profile-changes">Guardar</button>
+                        <button type="submit" class="btn bg-white text-primary" id="save-profile-changes">Guardar</button>
                     </div>
                 </form>
             </div>

@@ -1,3 +1,2 @@
 from .user_serializer import UserSerializer, UserCreateSerializer
 from .post_serializer import PostSerializer, PostCreateSerializer
-from .comment_serializer import CommentSerializer, CommentCreateSerializer

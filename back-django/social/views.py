@@ -7,8 +7,8 @@ from rest_framework.decorators import api_view
 import jwt
 from jwt import InvalidTokenError
 
-from social.serializers import PostSerializer, UserSerializer, CommentSerializer, UserCreateSerializer, PostCreateSerializer, CommentCreateSerializer
-from social.models import Post, User, Comment
+from social.serializers import PostSerializer, UserSerializer, UserCreateSerializer, PostCreateSerializer
+from social.models import Post, User
 
 import os
 
@@ -122,17 +122,6 @@ def get_user_posts(request, id):
     return JsonResponse(serializer.data, safe=False)
 
 
-@api_view(["GET"])
-def get_post_comments(request, post_id):
-    post = get_object_or_404(Post, id=post_id, deleted=False)
-    comments = Comment.objects.filter(post=post, deleted=False).order_by('-date_uploaded')
-    paginator = Paginator(comments, 10)
-    page = request.GET.get('page')
-    comments = paginator.get_page(page).object_list
-    serializer = CommentSerializer(comments, many=True)
-    return JsonResponse(serializer.data, safe=False)
-
-
 @api_view(["POST"])
 def create_post(request):
     print(request.data)
@@ -157,15 +146,6 @@ def update_user_profile(request, id):
     if serializer.is_valid():
         serializer.save()
         return JsonResponse(serializer.data, status=200)
-    return JsonResponse(serializer.errors, status=400)
-
-
-@api_view(["POST"])
-def upload_comment(request):
-    serializer = CommentSerializer(data=request.POST)
-    if serializer.is_valid():
-        serializer.save()
-        return JsonResponse(serializer.data, status=201)
     return JsonResponse(serializer.errors, status=400)
 
 
